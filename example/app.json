@@ -1,0 +1,22 @@
+{
+  "name": "expo-nexen-player-example",
+  "displayName": "ExpoNexenPlayer Example",
+  "expo": {
+    "name": "expo-nexen-player-example",
+    "slug": "expo-nexen-player-example",
+    "description": "Example app for expo-nexen-player",
+    "privacy": "public",
+    "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
