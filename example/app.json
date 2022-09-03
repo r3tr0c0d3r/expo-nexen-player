@@ -13,7 +13,8 @@
       "web"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "requireFullScreen": true
     },
     "assetBundlePatterns": [
       "**/*"

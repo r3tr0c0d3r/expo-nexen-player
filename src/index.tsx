@@ -1,3 +1,4 @@
-export function multiply(a: number, b: number): Promise<number> {
-  return Promise.resolve(a * b);
-}
+import NexenPlayer from './components/NexenPlayer';
+import { LayoutMode, NexenPlayerRef }  from './components/NexenPlayer';
+export default NexenPlayer;
+export { LayoutMode, NexenPlayerRef}
