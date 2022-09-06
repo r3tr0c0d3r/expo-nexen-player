@@ -15,7 +15,7 @@ import {
 import IconButton from './IconButton';
 import GradientView from './GradientView';
 import type { NexenTheme } from '../utils/Theme';
-import type { LayoutMode } from './NexenPlayer';
+import type { EdgeInsets, LayoutMode } from './NexenPlayer';
 import IconTagView, {
   IconTagViewRef,
   IconTagViewState,
@@ -36,7 +36,7 @@ type HeaderControlProps = {
   disableBack?: boolean;
   disableRatio?: boolean;
   disableMore?: boolean;
-  // disableLargeMode?: boolean;
+  insets?: EdgeInsets;
   nexenTheme?: NexenTheme;
   layoutMode?: LayoutMode;
   onBackPress?: () => void;
@@ -46,7 +46,6 @@ type HeaderControlProps = {
 
 const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
   (props, ref) => {
-    // console.log(`HeaderControl:: renders`);
     const {
       title,
       opacity,
@@ -56,9 +55,9 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
       disableBack,
       disableRatio,
       disableMore,
-      // disableLargeMode,
       nexenTheme,
       layoutMode,
+      insets,
       onBackPress,
       onAspectRatioPress,
       onMorePress,
@@ -68,17 +67,23 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
 
     const ICON_SIZE = nexenTheme?.sizes?.primaryIconSize;
     const ICON_COLOR = nexenTheme?.colors?.primaryIconColor;
-
     const TITLE_TEXT_SIZE = nexenTheme?.sizes?.primaryTextSize;
     const TITLE_TEXT_COLOR = nexenTheme?.colors?.primaryTextColor;
-    const CONTROL_VERTICAL_PADDING = nexenTheme?.sizes?.paddingVertical;
-    const CONTROL_HORIZONTAL_PADDING = nexenTheme?.sizes?.paddingHorizontal;
-    const CONTROL_HEIGHT =
+    const CONTAINER_VERTICAL_PADDING = fullScreen 
+    ? insets?.top! > 0 
+    ? insets?.top! 
+    : nexenTheme?.sizes?.paddingVertical
+    : nexenTheme?.sizes?.paddingVertical;
+    const CONTAINER_HORIZONTAL_PADDING = fullScreen 
+    ? (insets?.left! + insets?.right!) / 2 > 0 
+    ? (insets?.left! + insets?.right!) / 2
+    : nexenTheme?.sizes?.paddingHorizontal
+    : nexenTheme?.sizes?.paddingHorizontal;
+    const CONTAINER_HEIGHT =
       nexenTheme?.sizes?.primaryIconSize! +
       10 * 2 +
       16 +
-      CONTROL_VERTICAL_PADDING!;
-    console.log(`CONTROL_HEIGHT_HEADER: ${CONTROL_HEIGHT}`);
+      CONTAINER_VERTICAL_PADDING!;
     const isRTL = I18nManager.isRTL;
 
     useImperativeHandle(ref, () => ({
@@ -122,7 +127,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
       <Animated.View
         style={[
           styles.container,
-          { height: CONTROL_HEIGHT },
+          { height: CONTAINER_HEIGHT },
           { opacity, marginTop },
         ]}
       >
@@ -140,8 +145,8 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
           style={[
             styles.innerContainer,
             {
-              paddingTop: CONTROL_VERTICAL_PADDING,
-              paddingHorizontal: CONTROL_HORIZONTAL_PADDING,
+              paddingTop: CONTAINER_VERTICAL_PADDING,
+              paddingHorizontal: CONTAINER_HORIZONTAL_PADDING,
             },
           ]}
         >
@@ -164,7 +169,6 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
 
                 <Text
                   style={[styles.titleText, titleTextStyle]}
-                  // adjustsFontSizeToFit={true}
                   numberOfLines={2}
                 >
                   {title?.toUpperCase()}
@@ -215,7 +219,6 @@ const styles = StyleSheet.create({
     height: 56,
     minHeight: 56,
     zIndex: 100,
-    // backgroundColor: 'pink',
   },
   innerContainer: {
     position: 'absolute',
@@ -223,14 +226,10 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     bottom: 0,
-    // paddingTop: 8,
-    // backgroundColor: 'red'
   },
   iconButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    // flexShrink: 1,
-    // backgroundColor: 'green',
   },
   textContainer: {},
   titleText: {

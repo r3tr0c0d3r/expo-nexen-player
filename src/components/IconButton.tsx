@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React from 'react';
 import {
   StyleProp,
   StyleSheet,
@@ -28,6 +28,5 @@ const styles = StyleSheet.create({
   container: {
     padding: 10,
     marginHorizontal: 1,
-    // backgroundColor: '#cdc',
   },
 });

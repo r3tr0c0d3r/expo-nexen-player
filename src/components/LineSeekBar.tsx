@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Animated,
   I18nManager,
-  Platform,
   StyleSheet,
   View,
 } from 'react-native';
@@ -21,7 +20,6 @@ type LineSeekBarProps = {
 };
 
 const LineSeekBar = (props: LineSeekBarProps) => {
-  // console.log(`LineSeekBar:: ${props.width}`)
   const { trackTime, totalTrackTime, layoutWidth, theme } = props;
   const isRTL = I18nManager.isRTL;
   const rtlMultiplier = isRTL ? -1 : 1;
@@ -37,6 +35,7 @@ const LineSeekBar = (props: LineSeekBarProps) => {
     );
     seekWidth.setValue(position * rtlMultiplier);
   }, [trackTime, totalTrackTime, layoutWidth]);
+  
   return (
     <View style={styles.container}>
       <View

@@ -1,12 +1,19 @@
 import React from 'react';
-import {ColorValue, LayoutChangeEvent, StyleProp, StyleSheet, View, ViewStyle} from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop} from 'react-native-svg';
+import {
+  ColorValue,
+  LayoutChangeEvent,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 type GradientViewProps = {
   width?: number;
   height?: number;
-  startPoint?: {x: number; y: number};
-  endPoint?: {x: number; y: number};
+  startPoint?: { x: number; y: number };
+  endPoint?: { x: number; y: number };
   startColor?: ColorValue;
   middleColor?: ColorValue;
   endColor?: ColorValue;
@@ -35,14 +42,15 @@ const GradientView = (props: GradientViewProps) => {
     style,
   } = props;
 
-  const [dimensions, setDimensions] = React.useState({width: 0, height: 0});
+  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
   // console.log(`GradientView :: dimensions: ${JSON.stringify(dimensions)}`)
 
   const onLayoutChange = async (e: LayoutChangeEvent) => {
-    const {width, height} = e.nativeEvent.layout;
-    const {width: w, height: h} = dimensions;
+    const { width, height } = e.nativeEvent.layout;
+    const { width: w, height: h } = dimensions;
     if (w !== width || h !== height) {
-      setDimensions({width, height});
+      setDimensions({ width, height });
+      // console.log(`GradientView onLayoutChange:: width: ${width} height: ${height}`);
     }
   };
 
@@ -55,7 +63,8 @@ const GradientView = (props: GradientViewProps) => {
             x1={startPoint?.x}
             y1={startPoint?.y}
             x2={endPoint?.x}
-            y2={endPoint?.y}>
+            y2={endPoint?.y}
+          >
             <Stop
               offset={startOffset}
               stopColor={startColor}
@@ -73,7 +82,13 @@ const GradientView = (props: GradientViewProps) => {
             />
           </LinearGradient>
         </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#gradient)" />
+        <Rect
+          x="0"
+          y="0"
+          width={dimensions.width}
+          height={dimensions.height}
+          fill="url(#gradient)"
+        />
       </Svg>
     </View>
   );
@@ -82,8 +97,11 @@ const GradientView = (props: GradientViewProps) => {
 export default GradientView;
 
 GradientView.defaultProps = {
-  startPoint: {x: 0, y: 0},
-  endPoint: {x: 0, y: 1},
+  startPoint: { x: 0, y: 0 },
+  endPoint: { x: 0, y: 1 },
+  // startColor: 'red',
+  // middleColor: 'green',
+  // endColor: 'blue',
   startColor: 'black',
   middleColor: 'black',
   endColor: 'black',

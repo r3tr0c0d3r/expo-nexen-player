@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Animated,
-  ColorValue,
   GestureResponderEvent,
   I18nManager,
   LayoutChangeEvent,
@@ -18,18 +17,14 @@ import {
   IconFastForward,
   IconRewind,
   IconSun,
-  IconSun1,
-  IconSun2,
-  IconVolume,
-  IconVolume1,
   IconVolume2,
-  IconVolume3,
 } from './../../assets/icons';
 import SeekBarTipView, {
   SeekBarTipViewRef,
   SeekBarTipViewTheme,
 } from './SeekBarTipView';
 import TipView, { TipViewRef, TipViewTheme } from './TipView';
+import ErrorView, { ErrorViewTheme } from './ErrorView';
 import {
   clamp,
   originalToSeekValue,
@@ -40,10 +35,8 @@ import {
   getForwardOrRewindTimeTipText,
 } from '../utils/StringUtil';
 import { getAlphaColor } from '../utils/ColorUtil';
-import ModalView from './ModalView';
-import ErrorView, { ErrorViewTheme } from './ErrorView';
 import { getBrightnessIcon, getVolumeIcon } from '../utils/ComponentUtil';
-import type { LayoutMode } from './NexenPlayer';
+import type { Dimension, LayoutMode } from './NexenPlayer';
 import type { NexenTheme } from '../utils/Theme';
 
 const FORWARD_OR_REWIND_DURATION = 10;
@@ -79,19 +72,18 @@ type GestureViewProps = {
   currentTime: React.MutableRefObject<number>;
 
   layoutMode?: LayoutMode;
+  dimension: Dimension;
   volume?: number;
   brightness?: number;
   doubleTapTime?: number;
   nexenTheme?: NexenTheme;
   onTapDetected?: (event: TapEventType, value?: number) => void;
-  // onGestureDetected?: (event: GestureEventType, value: number) => void;
   onGestureStart?: (event: GestureEventType, value: number) => void;
   onGestureMove?: (event: GestureEventType, value: number) => void;
   onGestureEnd?: (event: GestureEventType, value: number) => void;
 };
 
 const GestureView = (props: GestureViewProps) => {
-  console.log(`GestureView: called!!`);
   const {
     style,
     fullScreen,
@@ -102,6 +94,7 @@ const GestureView = (props: GestureViewProps) => {
     isSeekable,
     gestureEnabled,
     layoutMode,
+    dimension,
     currentTime,
     durationTime,
     volume,
@@ -109,13 +102,10 @@ const GestureView = (props: GestureViewProps) => {
     doubleTapTime,
     nexenTheme,
     onTapDetected,
-    // onGestureDetected,
     onGestureStart,
     onGestureMove,
     onGestureEnd,
   } = props;
-
-  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
 
   const tapTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -223,35 +213,12 @@ const GestureView = (props: GestureViewProps) => {
     };
   }, [nexenTheme]);
 
-  const onLayoutChange = async (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    const { width: w, height: h } = dimensions;
-    if (w !== width || h !== height) {
-      setDimensions({ width, height });
-      // console.log(
-      //   `width: ${width} height: ${height} leftBound: ${leftBound.current} rightBound: ${rightBound.current}`,
-      // );
-    }
-  };
-
-  /* React.useEffect(() => {
-    const { width, height } = dimensions;
-    layoutSize.current = { width, height };
-    leftBound.current = (width * rtlMultiplier.current) / 4;
-    rightBound.current = width * rtlMultiplier.current - leftBound.current;
-    trackFactor.current = width / 60;
-    volumeFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
-    brightnessFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
-  }, [dimensions]); */
-
   React.useEffect(() => {
-    console.log(`layoutMode: ${layoutMode}`);
     layoutOption.current = layoutMode;
   }, [layoutMode]);
 
   React.useEffect(() => {
-    // const { height } = dimensions;
-    const { width, height } = dimensions;
+    const { width, height } = dimension;
     layoutSize.current = { width, height };
     leftBound.current = (width * rtlMultiplier.current) / 4;
     rightBound.current = width * rtlMultiplier.current - leftBound.current;
@@ -259,15 +226,12 @@ const GestureView = (props: GestureViewProps) => {
     volumeFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
     brightnessFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
 
-    // console.log(
-    //   `volume: ${volume} brightness: ${brightness} height: ${height} iconColor:${String(ICON_COLOR)}`
-    // );
     seekVolume.current = clamp(
       originalToSeekValue(volume!, MAX_VOLUME, height * BAR_HEIGHT_PERCENTAGE),
       0,
       height * BAR_HEIGHT_PERCENTAGE
     );
-    //const originalVolume = seekToOriginalValue(seekVolume.current, MAX_VOLUME, height * BAR_HEIGHT_PERCENTAGE);
+    
     volumeTipViewRef.current?.updateState({
       tipText: `${volume}%`,
       icon: getVolumeIcon(volume!, MAX_VOLUME, volumeBarTheme.iconSize, volumeBarTheme.iconColor),
@@ -283,7 +247,7 @@ const GestureView = (props: GestureViewProps) => {
       0,
       height * BAR_HEIGHT_PERCENTAGE
     );
-    // seekToOriginalValue(seekBrightness.current, MAX_BRIGHTNESS, height * BAR_HEIGHT_PERCENTAGE)
+    
     brightnessTipViewRef.current?.updateState({
       tipText: `${brightness}%`,
       icon: getBrightnessIcon(
@@ -294,11 +258,8 @@ const GestureView = (props: GestureViewProps) => {
       ),
     });
     brightnessBarHeight.setValue(seekBrightness.current);
-    console.log(
-      `ORG_CURRENT:vol: ${seekVolume.current} bri:: ${seekBrightness.current}`
-    );
-    // onShouldUpdateIcon?.(volume!, brightness!);
-  }, [volume, brightness, dimensions]);
+    
+  }, [volume, brightness, dimension]);
 
   React.useEffect(() => {
     return () => {
@@ -337,29 +298,18 @@ const GestureView = (props: GestureViewProps) => {
   const handleDoubleTapForward = () => {
     const time = currentTime.current + FORWARD_OR_REWIND_DURATION;
     rightRippleViewRef.current?.onPress(getForOrRewTimeTipText('+', FORWARD_OR_REWIND_DURATION, time));
-    
-    // rightRippleViewRef.current?.updateTipText(
-    //   getForOrRewTimeTipText('+', FORWARD_OR_REWIND_DURATION, time)
-    // );
     onTapDetected?.(TapEventType.DOUBLE_TAP_RIGHT, time);
   };
 
   const handleDoubleTapRewind = () => {
     const time = currentTime.current - FORWARD_OR_REWIND_DURATION;
     leftRippleViewRef.current?.onPress(getForOrRewTimeTipText('-', FORWARD_OR_REWIND_DURATION, time));
-    
-    // leftRippleViewRef.current?.updateTipText(
-    //   getForOrRewTimeTipText('-', FORWARD_OR_REWIND_DURATION, time)
-    // );
     onTapDetected?.(TapEventType.DOUBLE_TAP_LEFT, time);
   };
 
   const onScreenTouch = (event: GestureResponderEvent) => {
     const { locationX } = event.nativeEvent;
     if (tapTimeoutRef.current) {
-      console.log(
-        `onScreenTouch: 1 : locationX: ${locationX} leftBound: ${leftBound.current}`
-      );
       clearTimeout(tapTimeoutRef.current);
       tapTimeoutRef.current = null;
       if (!gestureEnabled.current || layoutOption?.current === 'basic' || locked)
@@ -367,13 +317,10 @@ const GestureView = (props: GestureViewProps) => {
       onTapDetected?.(TapEventType.DOUBLE_TAP);
 
       if (locationX * rtlMultiplier.current < leftBound.current) {
-        console.log(`LEFT`);
         handleDoubleTapRewind();
       } else if (locationX * rtlMultiplier.current > rightBound.current) {
-        console.log(`RIGHT`);
         handleDoubleTapForward();
       } else {
-        console.log(`MIDDLE`);
         onTapDetected?.(TapEventType.DOUBLE_TAP_MIDDLE);
       }
       // if (showControl) {
@@ -382,7 +329,6 @@ const GestureView = (props: GestureViewProps) => {
       //   }
       // }
     } else {
-      console.log(`onScreenTouch: 2`);
       tapTimeoutRef.current = setTimeout(() => {
         onTapDetected?.(TapEventType.SINGLE_TAP);
         tapTimeoutRef.current = null;
@@ -404,22 +350,15 @@ const GestureView = (props: GestureViewProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(
-        //   `panResponder:: handleMoveShouldSetPanResponder:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`,
-        // );
         if (isSeeking.current || isSliding.current) {
           return false;
         }
         return Math.abs(gestureState.dx) > 2 || Math.abs(gestureState.dy) > 2;
-        // return (Math.abs(gestureState.dx) > 2 && Math.abs(gestureState.dx) < layoutSize.current.width) || (Math.abs(gestureState.dy) > 2 && Math.abs(gestureState.dy) < layoutSize.current.height);
       },
       onMoveShouldSetPanResponderCapture: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(
-        //   `panResponder:: handleMoveShouldSetPanResponderCapture:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`,
-        // );
         if (isSeeking.current || isSliding.current) {
           return false;
         }
@@ -438,18 +377,6 @@ const GestureView = (props: GestureViewProps) => {
           return;
         locationX.current = e.nativeEvent.locationX;
         locationY.current = e.nativeEvent.locationY;
-        console.log(
-          `panResponder:: handlePanResponderGrant:locationX: ${e.nativeEvent.locationX} locationY: ${e.nativeEvent.locationY} dx: ${gestureState.dx} moveX: ${gestureState.moveX}`
-        );
-
-        // console.log(
-        //   `panResponder:: handlePanResponderGrant:: gestureEnabled: ${gestureEnabled.current}`,
-        // );
-        // if (
-        //   !(locationY.current < layoutSize.current.height - 88) ||
-        //   !(locationY.current > 64)
-        // )
-        //   return;
       },
       onPanResponderMove: (
         e: GestureResponderEvent,
@@ -461,12 +388,6 @@ const GestureView = (props: GestureViewProps) => {
           layoutOption?.current !== 'advanced'
         )
           return;
-          // console.log(
-          //   `iconSize: ${ICON_SIZE} iconColor:${String(ICON_COLOR)}`
-          // );
-        // console.log(
-        //   `panResponder:: handlePanResponderMove:: locationX: ${e.nativeEvent.locationX} pageX: ${e.nativeEvent.pageX} dx: ${gestureState.dx} moveX: ${gestureState.moveX}`,
-        // );
 
         if (dx.current !== gestureState.dx || dy.current !== gestureState.dy) {
           dx.current = gestureState.dx;
@@ -475,7 +396,7 @@ const GestureView = (props: GestureViewProps) => {
             storeDx.current.push(gestureState.dx);
             storeDy.current.push(gestureState.dy);
           }
-          // console.log(`panResponder:: handlePanResponderMove:: locationX: ${e.nativeEvent.locationX} pageX: ${e.nativeEvent.pageX} dx: ${gestureState.dx} dy: ${gestureState.dy}`);
+          
           if (storeDx.current.length === 5) {
             if (
               Math.abs(storeDx.current[4] - storeDx.current[0]) >
@@ -512,7 +433,6 @@ const GestureView = (props: GestureViewProps) => {
               }
 
             } else {
-              // console.log(`EXCEED`)
 
               if (
                 !(locationY.current + dy.current >= 0) ||
@@ -523,17 +443,12 @@ const GestureView = (props: GestureViewProps) => {
                 e.nativeEvent.locationX * rtlMultiplier.current <
                 (layoutSize.current.width * rtlMultiplier.current) / 2
               ) {
-                // console.log(
-                //   `BRIGHTNESS :dy: ${gestureState.dy} locX: ${e.nativeEvent.locationX} locY: ${e.nativeEvent.locationY}`,
-                // );
                 if (
                   activeGesture.current === '' ||
                   activeGesture.current === 'brightness'
                 ) {
                   activeGesture.current = 'brightness';
-                  // brightnessTipViewRef.current?.updateState({showTip: true});
                   if (gestureState.dy >= 0) {
-                    // console.log(`VOL: ${Math.floor(gestureState.dy / volumeFactor.current)}`);
                     seekBrightnessDy.current = -Math.round(
                       gestureState.dy / brightnessFactor.current
                     );
@@ -542,7 +457,6 @@ const GestureView = (props: GestureViewProps) => {
                       0,
                       layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
                     );
-                    // console.log(`BRIGHTNESS1 :boundHeight: ${boundHeight}`);
                     const originalBrightness = seekToOriginalValue(
                       boundHeight,
                       MAX_BRIGHTNESS,
@@ -574,7 +488,6 @@ const GestureView = (props: GestureViewProps) => {
                       0,
                       layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
                     );
-                    // console.log(`BRIGHTNESS2 :boundHeight: ${boundHeight}`);
                     const originalBrightness = seekToOriginalValue(
                       boundHeight,
                       MAX_BRIGHTNESS,
@@ -598,9 +511,6 @@ const GestureView = (props: GestureViewProps) => {
                   }
                 }
               } else {
-                // console.log(
-                //   `VOLUME :dy: ${gestureState.dy} locX: ${e.nativeEvent.locationX} locY: ${e.nativeEvent.locationY}`,
-                // );
                 if (
                   activeGesture.current === '' ||
                   activeGesture.current === 'volume'
@@ -608,7 +518,6 @@ const GestureView = (props: GestureViewProps) => {
                   activeGesture.current = 'volume';
 
                   if (gestureState.dy >= 0) {
-                    // console.log(`VOL: ${Math.floor(gestureState.dy / volumeFactor.current)}`);
                     seekVolumeDy.current = -Math.round(
                       gestureState.dy / volumeFactor.current
                     );
@@ -617,7 +526,7 @@ const GestureView = (props: GestureViewProps) => {
                       0,
                       layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
                     );
-                    // console.log(`VOLUME1 :boundHeight: ${boundHeight}`);
+
                     const originalVolume = seekToOriginalValue(
                       boundHeight,
                       MAX_VOLUME,
@@ -647,7 +556,7 @@ const GestureView = (props: GestureViewProps) => {
                       0,
                       layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
                     );
-                    // console.log(`VOLUME2 :boundHeight: ${boundHeight}`);
+
                     const originalVolume = seekToOriginalValue(
                       boundHeight,
                       MAX_VOLUME,
@@ -685,12 +594,6 @@ const GestureView = (props: GestureViewProps) => {
           layoutOption?.current !== 'advanced'
         )
           return;
-        console.log(
-          `panResponder:: handlePanResponderRelease:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx} dy: ${gestureState.dy}`
-        );
-        // console.log(
-        //   `panResponder:: handlePanResponderRelease:: minTime: ${minTime.current} maxTime: ${maxTime.current}`,
-        // );
 
         if (activeGesture.current === 'track') {
           const time = currentTime.current + minTime.current;
@@ -715,7 +618,7 @@ const GestureView = (props: GestureViewProps) => {
             MAX_VOLUME,
             layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
           );
-          onGestureMove?.(
+          onGestureEnd?.(
             GestureEventType.VOLUME,
             originalVolume
           );
@@ -735,7 +638,7 @@ const GestureView = (props: GestureViewProps) => {
             MAX_BRIGHTNESS,
             layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
           );
-          onGestureMove?.(
+          onGestureEnd?.(
             GestureEventType.BRIGHTNESS,
             originalBrightness
           );
@@ -753,9 +656,7 @@ const GestureView = (props: GestureViewProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        console.log(
-          `panResponder:: handlePanResponderTerminate:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`
-        );
+
       },
       onShouldBlockNativeResponder: (
         e: GestureResponderEvent,
@@ -767,7 +668,6 @@ const GestureView = (props: GestureViewProps) => {
   return (
     <View
       style={[styles.container, style]}
-      onLayout={onLayoutChange}
       {...panResponder.current.panHandlers}
     >
       <TouchableOpacity
@@ -783,10 +683,10 @@ const GestureView = (props: GestureViewProps) => {
               left: 0,
               top: 0,
               bottom: 0,
-              width: dimensions.width / 4,
+              width: dimension.width / 4,
             }}
             rippleStyle={{ right: 0 }}
-            rippleSize={ dimensions.height / 2 }
+            rippleSize={ dimension.height / 2 }
           >
             <IconRewind
               style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
@@ -803,10 +703,10 @@ const GestureView = (props: GestureViewProps) => {
               top: 0,
               right: 0,
               bottom: 0,
-              width: dimensions.width / 4,
+              width: dimension.width / 4,
             }}
             rippleStyle={{ left: 0 }}
-            rippleSize={ dimensions.height / 2 }
+            rippleSize={ dimension.height / 2 }
           >
             <IconFastForward
               style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
@@ -824,13 +724,13 @@ const GestureView = (props: GestureViewProps) => {
               top: 0,
               left: 0,
               bottom: 0,
-              width: dimensions.width / 4,
+              width: dimension.width / 4,
             }}
             style={{
               backgroundColor: CONTAINER_BACKGROUND_COLOR,
               borderRadius: CONTAINER_BORDER_RADIUS,
             }}
-            dimensions={dimensions}
+            dimension={dimension}
             barHeight={volumeBarHeight}
             heightPercentage={BAR_HEIGHT_PERCENTAGE}
             icon={<IconVolume2 size={volumeBarTheme.iconSize} color={volumeBarTheme.iconColor} />}
@@ -845,13 +745,13 @@ const GestureView = (props: GestureViewProps) => {
               top: 0,
               right: 0,
               bottom: 0,
-              width: dimensions.width / 4,
+              width: dimension.width / 4,
             }}
             style={{
               backgroundColor: CONTAINER_BACKGROUND_COLOR,
               borderRadius: CONTAINER_BORDER_RADIUS,
             }}
-            dimensions={dimensions}
+            dimension={dimension}
             barHeight={brightnessBarHeight}
             heightPercentage={BAR_HEIGHT_PERCENTAGE}
             icon={<IconSun size={brightnessBarTheme.iconSize} color={brightnessBarTheme.iconColor} />}

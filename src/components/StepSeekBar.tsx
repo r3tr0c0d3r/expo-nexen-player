@@ -7,9 +7,11 @@ import {
   LayoutChangeEvent,
   PanResponder,
   PanResponderGestureState,
+  StyleProp,
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
 import { boundPosition } from '../utils/MathUtil';
 import type { SpeedSeekBarTheme } from '../utils/Theme';
@@ -22,15 +24,13 @@ type StepSeekBarProps = {
   initialIndex?: number;
   data: string[];
   theme?: StepSeekBarTheme;
+  style?: StyleProp<ViewStyle>;
   onStepChange?: (value: string) => void;
 };
 
-// const HORIZONTAL_PADDING = 7;
-
 const StepSeekBar = (props: StepSeekBarProps) => {
-  const { data, initialIndex, theme, onStepChange } = props;
+  const { data, initialIndex, theme, style, onStepChange } = props;
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
-  // const [moving, setMoving] = React.useState(false);
 
   const cursorPosition = React.useRef(new Animated.Value(0)).current;
   const locationX = React.useRef(0);
@@ -53,31 +53,23 @@ const StepSeekBar = (props: StepSeekBarProps) => {
     const { width: w, height: h } = dimensions;
     if (w !== width || h !== height) {
       setDimensions({ width, height });
-      console.log(`width: ${width} height: ${height}`);
     }
   };
 
   React.useEffect(() => {
-    seekDistance.current =
-      (dimensions.width - theme?.thumbSize!) * rtlMultiplier.current;
-
+    seekDistance.current = (dimensions.width - theme?.thumbSize!) * rtlMultiplier.current;
     stepWidth.current = seekDistance.current / (data.length - 1);
     stepThreshold.current = stepWidth.current / 2;
-    console.log(
-      `slideDistance: ${seekDistance.current} stepThreshold: ${stepThreshold.current} stepWidth:: ${stepWidth.current}`
-    );
     calculateInitialStep();
   }, [dimensions]);
 
   const calculateInitialStep = () => {
-    const currentPosition = (stepWidth.current * initialIndex!);// + (theme?.thumbSize! / 2);
+    const currentPosition = (stepWidth.current * initialIndex!);
     locationX.current = currentPosition;
     cursorPosition.setValue(currentPosition);
-    console.log(`initialIndex: ${initialIndex} currentPosition: ${currentPosition}`);
   };
 
   const moveTo = (position: number, callback?: () => void) => {
-    console.log(`moveTo:: value: ${position}`);
     Animated.timing(cursorPosition, {
       toValue: position,
       duration: 200,
@@ -90,7 +82,6 @@ const StepSeekBar = (props: StepSeekBarProps) => {
   };
 
   const jumpTo = (position: number, callback?: () => void) => {
-    console.log(`jumpTo:: ${position}`);
     Animated.timing(cursorPosition, {
       toValue: position,
       duration: 100,
@@ -128,20 +119,13 @@ const StepSeekBar = (props: StepSeekBarProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(
-        //   `StepSlider:panResponder:: onPanResponderGrant:: locationX: ${locationX.current} isMoving: ${isMoving.current}`,
-        // );
       },
       onPanResponderMove: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(`panResponder:: handlePanResponderMove:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`);
         if (dx.current != gestureState.dx) {
           dx.current = gestureState.dx;
-          // console.log(
-          //     `StepSlider:panResponder:: onPanResponderMove: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx} isMoving: ${isMoving.current}`,
-          //   );
 
           if (isMoving.current) {
             const position = boundPosition(
@@ -149,7 +133,6 @@ const StepSeekBar = (props: StepSeekBarProps) => {
               seekDistance.current
             );
             cursorPosition.setValue(position);
-            // console.log(`position: ${position}`)
           } else {
             if (Math.abs(dx.current) > 20) {
               if (animFinished.current) {
@@ -159,7 +142,6 @@ const StepSeekBar = (props: StepSeekBarProps) => {
                   locationX.current + dx.current,
                   seekDistance.current
                 );
-                // cursorPosition.setValue(position);
                 jumpTo(position, () => {
                   isMoving.current = true;
                   animFinished.current = true;
@@ -173,12 +155,6 @@ const StepSeekBar = (props: StepSeekBarProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(
-        //   `StepSlider:panResponder:: handlePanResponderRelease:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`,
-        // );
-        // console.log(
-        //   `StepSlider:panResponder:: handlePanResponderRelease:: locationX: ${locationX.current} dx: ${dx.current}`,
-        // );
         isMoving.current = false;
         const position = boundPosition(
           locationX.current + dx.current,
@@ -188,7 +164,6 @@ const StepSeekBar = (props: StepSeekBarProps) => {
 
         const index = Math.floor(locationX.current / stepWidth.current);
         const remainder = locationX.current % stepWidth.current;
-        // console.log(`index: ${index} remainder: ${remainder}`);
         if (Math.abs(remainder) >= Math.abs(stepThreshold.current)) {
           const nextPosition = stepWidth.current * (index + 1);
           locationX.current = nextPosition;
@@ -211,13 +186,9 @@ const StepSeekBar = (props: StepSeekBarProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
-        // console.log(
-        //   `StepSlider:panResponder:: handlePanResponderTerminate:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`,
-        // );
+
       },
       onShouldBlockNativeResponder: (evt, gestureState) => {
-        // Returns whether this component should block native components from becoming the JS
-        // responder. Returns true by default. Is currently only supported on android.
         return true;
       },
     })
@@ -251,7 +222,7 @@ const StepSeekBar = (props: StepSeekBarProps) => {
   }
 
   return (
-    <View style={styles.container} onLayout={onLayoutChange}>
+    <View style={[styles.container, style]} onLayout={onLayoutChange}>
       <View style={styles.slideContainer}>
         <View style={[styles.line, lineStyle]} />
         <View style={[styles.dotContainer, {left: HORIZONTAL_PADDING, right: HORIZONTAL_PADDING}]}>
@@ -291,8 +262,8 @@ StepSeekBar.defaultProps = {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    flex: 1,
     justifyContent: 'center',
+    height: 50,
   },
   slideContainer: {
     position: 'relative',
@@ -326,7 +297,6 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   cursor: {
-    // position: 'absolute',
     width: 16,
     height: 16,
     borderRadius: 8,

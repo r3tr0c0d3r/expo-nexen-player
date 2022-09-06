@@ -1,14 +1,11 @@
 import React from 'react';
-import {Animated, ColorValue, Easing, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
+import {Animated, Easing, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
 import {IconLoader} from './../../assets/icons';
 import ModalView from './ModalView';
 import type { TipViewTheme } from './TipView';
 
 export interface LoaderTheme extends TipViewTheme {
-  // iconSize?: number;
-  // iconColor?: ColorValue;
-  // textSize?: number;
-  // textColor?: ColorValue;
+
 }
 
 type LoaderProps = {
@@ -43,7 +40,6 @@ const Loader = (props: LoaderProps) => {
 
   return (
     <ModalView style={style}>
-      <>
       <Animated.View style={{transform: [{rotate: spinAnim}]}}>
         {props.loadingIcon ? (
           props.loadingIcon
@@ -57,7 +53,6 @@ const Loader = (props: LoaderProps) => {
           {props.loadingText ? props.loadingText : 'Loading...'}
         </Text>
       </View>
-      </>
     </ModalView>
   );
 };

@@ -7,30 +7,12 @@ export interface TimeTagViewTheme extends TagViewTheme {
 }
 type TimeTagViewProps = {
   timeText: string;
-  // fullScreen: boolean;
-  // disableLargeMode?: boolean;
   theme?: TimeTagViewTheme;
   style?: StyleProp<ViewStyle>;
 };
 
 const TimeTagView = (props: TimeTagViewProps) => {
   const { timeText, theme, style } = props;
-
-  // const TEXT_CONTAINER_HEIGHT = nexenTheme?.tagView?.height;
-  // const TEXT_CONTAINER_BORDER_RADIUS = nexenTheme?.tagView?.cornerRadius
-  // const TEXT_CONTAINER_BORDER_WIDTH = nexenTheme?.tagView?.borderWidth;
-  // const TEXT_FONT_SIZE = nexenTheme?.tagView?.textSize;
-  // const TEXT_LINE_HEIGHT = nexenTheme?.tagView?.textLineHeight;
-  // const TEXT_MARGIN = fullScreen ? 8 : 6;
-
-  // const {
-  //   tagViewHeight: TEXT_CONTAINER_HEIGHT,
-  //   tagViewCornerRadius: TEXT_CONTAINER_BORDER_RADIUS,
-  //   tagViewBorderWidth: TEXT_CONTAINER_BORDER_WIDTH,
-  //   tagViewTextSize: TEXT_FONT_SIZE,
-  //   tagViewTextLineHeight: TEXT_LINE_HEIGHT,
-
-  // } = useNexenSize(fullScreen, disableLargeMode!, nexenTheme!);
 
   const textContainerStyle = {
     height: theme?.height,

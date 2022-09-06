@@ -11,18 +11,16 @@ import {
 import type { VerticalSeekBarTheme } from '../utils/Theme';
 
 import ModalView from './ModalView';
+import { Dimension } from './NexenPlayer';
 import type { TipViewTheme } from './TipView';
 
 
 export interface SeekBarTipViewTheme extends VerticalSeekBarTheme, TipViewTheme {
-  // containerColor?: ColorValue;
-  // containerBorderRadius?: number;
-  // textColor?: ColorValue;
-  // textSize?: number;
+  
 }
 
 type SeekBarTipViewProps = {
-  dimensions: {width: number; height: number};
+  dimension: Dimension;
   barHeight: Animated.Value;
   heightPercentage: number;
   icon: JSX.Element;
@@ -41,7 +39,7 @@ type SeekBarTipViewState = {
 };
 const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>((props, ref) => {
   // console.log(`SeekBarTipView: renders`)
-  const {dimensions, barHeight, heightPercentage, icon, parentStyle, style, theme} = props;
+  const {dimension, barHeight, heightPercentage, icon, parentStyle, style, theme} = props;
   React.useEffect(() => {
     console.log(`SeekBarTipView theme:: ${JSON.stringify(theme)}`);
   }, [])
@@ -74,7 +72,7 @@ const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>(
 
   const seekBarUnderlayStyle = {
     backgroundColor: theme?.underlayColor,
-    height: dimensions.height * heightPercentage,
+    height: dimension.height * heightPercentage,
   }
 
   React.useEffect(() => {
@@ -95,7 +93,6 @@ const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>(
       {state.showTip && (
         <View style={[styles.parent, parentStyle]}>
           <ModalView style={[styles.container, style]}>
-            <>
             <Text style={[styles.text, textStyle]}>{state.tipText}</Text>
             <View style={styles.barContainer}>
               <View
@@ -109,7 +106,6 @@ const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>(
               </View>
             </View>
             <View style={styles.iconContainer}>{state.icon}</View>
-            </>
           </ModalView>
         </View>
       )}
@@ -128,10 +124,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    // position: 'absolute',
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    // backgroundColor: DefaultTheme.common?.containerColor,
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -145,32 +137,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 6,
     height: 60,
-
-    // backgroundColor: DefaultTheme.volumeSeekBar?.barColor,
   },
   seekBarUnderlay: {
-    //   position: 'absolute',
-    //   top: 0,
-    //   left: 0,
     width: 6,
     height: 100,
     borderRadius: 3,
     overflow: 'hidden',
     justifyContent: 'flex-end',
-    // backgroundColor: 'rgba(10, 10, 10, 0.3)',
-    // backgroundColor: DefaultTheme.volumeSeekBar?.barUnderlayColor,
   },
   text: {
     minWidth: 35,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-    // color: DefaultTheme.common?.primaryTextColor,
     opacity: 0.8,
   },
   iconContainer: {
     paddingHorizontal: 4,
-    // paddingVertical: 5,
     opacity: 0.8,
   },
 });

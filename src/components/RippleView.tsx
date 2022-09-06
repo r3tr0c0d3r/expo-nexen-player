@@ -1,7 +1,6 @@
 import {
   Animated,
   Easing,
-  LayoutChangeEvent,
   StyleProp,
   StyleSheet,
   Text,
@@ -30,7 +29,6 @@ type RippleViewProps = {
 export type RippleEvent = {x: number; y: number};
 export type RippleViewRef = {
   onPress: (newTipText?: string, callback?: () => void) => void;
-  // updateTipText: (newTipText: string) => void;
 };
 
 const RippleView = React.forwardRef<RippleViewRef, RippleViewProps>(
@@ -44,7 +42,6 @@ const RippleView = React.forwardRef<RippleViewRef, RippleViewProps>(
 
     useImperativeHandle(ref, () => ({
       onPress: (newTipText?: string, callback?: () => void) => {
-        // console.log(`RippleView:: x: ${x} y: ${y}`);
         startRippleAnimation();
         startBlinkAnimation();
         if (newTipText) {
@@ -72,9 +69,7 @@ const RippleView = React.forwardRef<RippleViewRef, RippleViewProps>(
             duration: 300,
             useNativeDriver: false,
           }).start(() => {
-            // console.log(`radius: ${dimensions.height/2}`)
             rippleScale.setValue(0);
-            // rippleRadius.setValue(dimensions.height/2);
             callback?.();
           });
         }
@@ -117,12 +112,9 @@ const RippleView = React.forwardRef<RippleViewRef, RippleViewProps>(
             },
             rippleStyle,
             {
-              // borderRadius: rippleRadius,
               opacity: rippleOpacity,
               transform: [
                 {scale: rippleScale},
-                //   {translateX: rippleTranslateX},
-                //   {translateY: rippleTranslateY},
               ],
             },
           ]}
@@ -149,7 +141,6 @@ export default RippleView;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // overflow: 'hidden',
     justifyContent: 'center',
   },
   innerContainer: {
@@ -159,10 +150,6 @@ const styles = StyleSheet.create({
   },
   ripple: {
     position: 'absolute',
-    // left: 0,
-    // top: 0,
-    // right: 0,
-    // bottom: 0,
     backgroundColor: 'rgba(250,250,250,0.3)',
   },
   flashContainer: {
@@ -170,7 +157,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    // position: 'absolute',
     fontSize: 14,
     fontWeight: '600',
     color: '#fafafa',

@@ -1,29 +1,16 @@
 import React from 'react'
-import { View, Text, Animated, StyleSheet, ViewStyle, StyleProp } from 'react-native'
+import { Animated, StyleSheet, ViewStyle, StyleProp } from 'react-native'
 
 type ModalViewProps = {
-  children: JSX.Element;
-  opacity?: Animated.Value;
-  marginLeft?: Animated.Value;
-  marginRight?: Animated.Value;
-  marginTop?: Animated.Value;
-  marginBottom?: Animated.Value;
+  children: React.ReactNode;
   style?: StyleProp<ViewStyle> | undefined;
 }
 
 const ModalView = (props: ModalViewProps) => {
-  const {children, style, opacity, marginLeft, marginTop, marginRight, marginBottom} = props;
-
-  const containerStyle = {
-    opacity, 
-    marginLeft,
-    marginTop,
-    marginRight, 
-    marginBottom,
-  }
+  const { children, style } = props;
 
   return (
-    <Animated.View style={[styles.container, style, containerStyle]}>
+    <Animated.View style={[styles.container, style]}>
       {children}
     </Animated.View>
   )

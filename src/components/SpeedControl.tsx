@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Animated,
   StyleProp,
   StyleSheet,
   TouchableHighlight,
@@ -12,36 +11,40 @@ import { getAlphaColor } from '../utils/ColorUtil';
 import GradientView from './GradientView';
 import StepSeekBar, { StepSeekBarTheme } from './StepSeekBar';
 import ModalView from './ModalView';
+import { withAnimation } from '../hoc/withAnimation';
+import { EdgeInsets } from './NexenPlayer';
 
 const speedData = ['0.25', '0.5', '0.75', '1.0', '1.5', '2.0', '3.0'];
 
 type SpeedControlProps = {
-  opacity: Animated.Value;
-  marginBottom: Animated.Value;
   style?: StyleProp<ViewStyle>;
   currentSpeed?: number;
+  fullScreen: boolean;
   nexenTheme?: NexenTheme;
-  // seekBarTheme?: StepSeekBarTheme;
+  insets?: EdgeInsets;
   onSpeedChange?: (speed: string) => void;
 };
 
 const SpeedControl = (props: SpeedControlProps) => {
   const {
-    opacity,
-    marginBottom,
     style,
     currentSpeed,
+    fullScreen,
     nexenTheme,
+    insets,
     onSpeedChange,
   } = props;
-  // const floatValue = currentSpeed?.toFixed(1);
+
   const srtValue = String(currentSpeed);
   const curerntIndex = speedData.indexOf(srtValue!);
-  console.log(`curerntIndex: ${curerntIndex} srtValue: ${srtValue} currentSpeed: ${currentSpeed}`);
   const validIndex = curerntIndex < 0 ? 3 : curerntIndex;
-  const CONTAINER_BACKGROUND_COLOR = getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.7)
-  const CONTAINER_BORDER_RADIUS = nexenTheme?.sizes?.modalCornerRadius
-  // const CONTAINER_PADDING = nexenTheme?.sizes?.paddingVertical
+
+    const CONTAINER_HORIZONTAL_PADDING = fullScreen 
+    ? (insets?.left! + insets?.right!) / 2 > 0 
+    ? (insets?.left! + insets?.right!) / 2
+    : 8
+    : 8;
+
 
   const stepSeekBarTheme = React.useMemo((): StepSeekBarTheme => {
     return {
@@ -64,17 +67,18 @@ const SpeedControl = (props: SpeedControlProps) => {
     };
   }, [nexenTheme]);
 
-  const CONTAINER_HEIGHT = stepSeekBarTheme.thumbSize! + 12 * 2 + stepSeekBarTheme?.textSize! + nexenTheme?.sizes?.paddingVertical! * 2;
-  console.log(`CONTAINER_HEIGHT:: ${CONTAINER_HEIGHT}`)
+  const SEEK_BAR_HEIGHT = stepSeekBarTheme.thumbSize! + 12 * 2 + stepSeekBarTheme?.textSize!;
+
   const containerStyle = {
-    // opacity, 
-    // marginBottom, 
-    height: CONTAINER_HEIGHT,
+    left: CONTAINER_HORIZONTAL_PADDING,
+    right: CONTAINER_HORIZONTAL_PADDING,
+    bottom: 0,
     paddingHorizontal: 0,
     paddingVertical: 0,
-    backgroundColor: CONTAINER_BACKGROUND_COLOR,
-    borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
-    borderTopRightRadius: CONTAINER_BORDER_RADIUS,
+  }
+
+  const stepSeekBarStyle = {
+    height: SEEK_BAR_HEIGHT,
   }
 
   return (
@@ -82,12 +86,9 @@ const SpeedControl = (props: SpeedControlProps) => {
       style={[
         styles.container,
         style,
-        containerStyle,
+        containerStyle
       ]}
-      opacity={opacity}
-      marginBottom={marginBottom}
     >
-      <>
       <GradientView
         style={{
           height: '100%',
@@ -97,20 +98,20 @@ const SpeedControl = (props: SpeedControlProps) => {
         middleOpacity={0.2}
         endOpacity={0.5}
       />
-      <TouchableHighlight style={styles.innerContainer}>
+      <TouchableHighlight style={[styles.innerContainer]}>
         <StepSeekBar
+          style={stepSeekBarStyle}
           data={speedData}
           initialIndex={validIndex}
           theme={stepSeekBarTheme}
           onStepChange={onSpeedChange}
         />
       </TouchableHighlight>
-      </>
     </ModalView>
   );
 };
 
-export default SpeedControl;
+export default withAnimation(SpeedControl);
 
 SpeedControl.defaultProps = {
   currentSpeed: 1.0,
@@ -118,17 +119,9 @@ SpeedControl.defaultProps = {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    left: 8,
-    right: 8,
-    bottom: 0,
-    // minHeight: 50,
-    // maxHeight: 100,
+    maxHeight: 120,
     zIndex: 110,
-    
     overflow: 'hidden',
-    // borderTopLeftRadius: 8,
-    // borderTopRightRadius: 8,
   },
   innerContainer: {
     position: 'absolute',
@@ -136,6 +129,7 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     bottom: 0,
-    padding: 10,
+    padding: 16,
+    justifyContent: 'center',
   },
 });

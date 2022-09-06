@@ -3,12 +3,10 @@ import {
   Animated,
   I18nManager,
   StyleSheet,
-  Text,
   TouchableHighlight,
   View,
 } from 'react-native';
 import {
-  IconSubtitle,
   IconMaximize,
   IconMinimize,
   IconPaly,
@@ -16,14 +14,10 @@ import {
   IconStop,
   IconVolume,
   IconVolume2,
-  IconSun1,
-  IconRepeat1,
-  IconZap,
   IconSkipBack,
   IconSkipForward,
   IconPlayCircle,
   IconPauseCircle,
-  IconFilm,
   IconAspectRatio,
 } from '../../assets/icons';
 import IconButton from './IconButton';
@@ -31,22 +25,22 @@ import { formatTime } from '../utils/StringUtil';
 import SeekBar, { SeekBarTheme } from './SeekBar';
 import SlideButton, { SlideButtonTheme } from './SlideButton';
 import GradientView from './GradientView';
-import IconTagView, {
+import {
   IconTagViewRef,
   IconTagViewState,
-  IconTagViewTheme,
 } from './IconTagView';
 import { getAlphaColor } from '../utils/ColorUtil';
 import TimeTagView, { TimeTagViewTheme } from './TimeTagView';
 import VolumeTagView, { VolumeTagViewTheme } from './VolumeTagView';
 import type { NexenTheme } from '../utils/Theme';
-import type { LayoutMode } from './NexenPlayer';
+import type { EdgeInsets, LayoutMode } from './NexenPlayer';
 
 type FooterControlProps = {
   opacity: Animated.Value;
   marginBottom: Animated.Value;
   paused: boolean;
   isSeekable?: React.MutableRefObject<boolean>;
+  isVolumeSeekable?: React.MutableRefObject<boolean>;
   fullScreen: boolean;
   muted: boolean;
   locked: boolean;
@@ -55,6 +49,7 @@ type FooterControlProps = {
   totalTrackTime: number;
   volume: number;
   totalVolume: number;
+  insets?: EdgeInsets;
   nexenTheme?: NexenTheme;
   layoutMode?: LayoutMode;
   disableSkip?: boolean;
@@ -110,12 +105,14 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
       locked,
       nexenTheme,
       layoutMode,
+      insets,
       trackTime,
       cachedTrackTime,
       totalTrackTime,
       volume,
       totalVolume,
       isSeekable,
+      isVolumeSeekable,
       disableStop,
       disableVolume,
       disableSkip,
@@ -141,30 +138,35 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
       onSkipBack,
       onAspectRatioPress,
     } = props;
-    // console.log(`FooterControl:: renders : isSeekable: ${isSeekable?.current} disableStop: ${disableStop}`);
+    
     const isRTL = I18nManager.isRTL;
     const iconTagViewRef = React.useRef<IconTagViewRef>(null);
 
     const ICON_SIZE_FACTOR = layoutMode === 'advanced' ? 1.8 : 1;
     const ICON_SIZE = nexenTheme?.sizes?.primaryIconSize;
     const ICON_COLOR = nexenTheme?.colors?.primaryIconColor;
-
-    const CONTROL_VERTICAL_PADDING = nexenTheme?.sizes?.paddingVertical;
-    const CONTROL_HORIZONTAL_PADDING = nexenTheme?.sizes?.paddingHorizontal;
+    const CONTAINER_VERTICAL_PADDING = fullScreen 
+    ? insets?.bottom! > 0 
+    ? insets?.bottom!
+    : nexenTheme?.sizes?.paddingVertical
+    : nexenTheme?.sizes?.paddingVertical;
+    const CONTAINER_HORIZONTAL_PADDING = fullScreen 
+    ? (insets?.left! + insets?.right!) / 2 > 0
+    ? (insets?.left! + insets?.right!) / 2
+    : nexenTheme?.sizes?.paddingHorizontal
+    : nexenTheme?.sizes?.paddingHorizontal;
     const TAG_VIEW_HEIGHT = nexenTheme?.tagView?.height;
 
-    const CONTROL_HEIGHT = locked
+    const CONTAINER_HEIGHT = locked
       ? ICON_SIZE! * ICON_SIZE_FACTOR +
         10 * 2 +
         TAG_VIEW_HEIGHT! +
-        CONTROL_VERTICAL_PADDING! +
+        CONTAINER_VERTICAL_PADDING! +
         8
       : ICON_SIZE! * ICON_SIZE_FACTOR +
         10 * 2 +
         TAG_VIEW_HEIGHT! +
-        CONTROL_VERTICAL_PADDING!;
-
-    // console.log(`CONTROL_HEIGHT_FOOTER: ${CONTROL_HEIGHT}`);
+        CONTAINER_VERTICAL_PADDING!;
 
     useImperativeHandle(ref, () => ({
       updateIconTagView: (newState: IconTagViewState) => {
@@ -202,14 +204,17 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
 
     const volumeSeekBarTheme = React.useMemo((): VolumeTagViewTheme => {
       return {
-        barColor:
-          nexenTheme?.miniSeekBar?.barColor ||
+        barColor: muted 
+        ? '#414141'
+        :  nexenTheme?.miniSeekBar?.barColor ||
           getAlphaColor(nexenTheme?.colors?.secondaryColor!, 0.7),
-        underlayColor:
-          nexenTheme?.miniSeekBar?.underlayColor ||
+        underlayColor: muted 
+        ? '#919191'
+        :  nexenTheme?.miniSeekBar?.underlayColor ||
           getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.3),
-        thumbColor:
-          nexenTheme?.miniSeekBar?.thumbColor ||
+        thumbColor: muted 
+        ? '#313131'
+        :  nexenTheme?.miniSeekBar?.thumbColor ||
           nexenTheme?.colors?.accentColor,
         borderColor:
           nexenTheme?.tagView?.borderColor ||
@@ -226,7 +231,7 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
         thumbSize: nexenTheme?.miniSeekBar?.thumbSize,
         thumbCornerRadius: nexenTheme?.miniSeekBar?.thumbCornerRadius,
       };
-    }, [nexenTheme, fullScreen]);
+    }, [nexenTheme, fullScreen, muted]);
 
     const timeTagViewTheme = React.useMemo((): TimeTagViewTheme => {
       return {
@@ -361,7 +366,7 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
                 volume={volume}
                 totalVolume={totalVolume}
                 muted={muted}
-                isSeekable={isSeekable}
+                isSeekable={isVolumeSeekable}
                 theme={volumeSeekBarTheme}
                 onVolumeSeekStart={onVolumeSeekStart}
                 onVolumeSeekUpdate={onVolumeSeekUpdate}
@@ -470,7 +475,7 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
       <Animated.View
         style={[
           styles.container,
-          { height: CONTROL_HEIGHT },
+          { height: CONTAINER_HEIGHT },
           { opacity, marginBottom },
         ]}
       >
@@ -487,8 +492,8 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
           style={[
             styles.innerContainer,
             {
-              paddingBottom: CONTROL_VERTICAL_PADDING,
-              paddingHorizontal: CONTROL_HORIZONTAL_PADDING,
+              paddingBottom: CONTAINER_VERTICAL_PADDING,
+              paddingHorizontal: CONTAINER_HORIZONTAL_PADDING,
             },
           ]}
         >
@@ -548,7 +553,7 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
 export default React.memo(FooterControl);
 
 FooterControl.defaultProps = {
-  // disableLargeMode: false,
+  
 };
 
 const styles = StyleSheet.create({
@@ -560,7 +565,6 @@ const styles = StyleSheet.create({
     height: 68,
     minHeight: 68,
     zIndex: 100,
-    // backgroundColor: 'pink'
   },
   innerContainer: {
     position: 'absolute',
@@ -569,14 +573,10 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     flexDirection: 'row',
-    // paddingBottom: 8,
-    // backgroundColor: 'red',
   },
   iconButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    // flexShrink: 1,
-    // backgroundColor: 'green',
   },
   lockedViewContainer: {
     flexDirection: 'row',
@@ -590,7 +590,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seekbarContainer: {
-    // flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -599,19 +598,6 @@ const styles = StyleSheet.create({
   trackSeekbar: {
     marginHorizontal: 4,
   },
-  // textContainer: {
-  //   height: 18,
-  //   borderRadius: 9,
-  //   borderWidth: 2,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
-  // timeText: {
-  //   fontSize: 11,
-  //   opacity: 0.8,
-  //   marginHorizontal: 6,
-  //   lineHeight: 13,
-  // },
   slideButtonContainer: {
     flex: 1,
     padding: 8,

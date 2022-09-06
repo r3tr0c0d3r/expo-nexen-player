@@ -60,18 +60,23 @@ import {
   VideoReadyForDisplayEvent,
 } from 'expo-av';
 import * as Brightness from 'expo-brightness';
+import { WrapperComponentRef } from '../hoc/withAnimation';
 
 const ANIMATION_DURATION = 300;
-const ANIMATION_MORE_DURATION = 350;
-const ANIMATION_SPEED_DURATION = 350;
 const USE_NATIVE_DRIVER = false;
 const FORWARD_OR_REWIND_DURATION = 10;
+
+export type EdgeInsets = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
 
 export type LayoutMode = 'basic' | 'intermediate' | 'advanced';
 export type ControlHideMode = 'auto' | 'touch';
 export type Dimension = { width: number; height: number };
 export type ResizeMode = 'stretch' | 'contain' | 'cover' | undefined;
-
 export type PlaylistItem = {
   title?: string;
   source: string;
@@ -81,20 +86,19 @@ export type PlaylistItem = {
 const RESIZE_MODES = ['BEST_FIT', 'FIT_TO_SCREEN', 'FILL_TO_SCREEN'];
 const RESIZE_MODE_VALUES: ResizeMode[] = ['contain', 'cover', 'stretch'];
 
-const { width: ww, height: wh } = Dimensions.get('window');
-
 export type NexenPlayerRef = {
   play: () => void;
   pause: () => void;
   stop: () => void;
   skipNext: () => void;
   skipBack: () => void;
+  reload: () => void;
   setLoop: (loop: boolean) => void;
   setMuted: (mute: boolean) => void;
   setVolume: (volume: number) => void;
   setBrightness: (brightness: number) => void;
   setPlaybackSpeed: (speed: number) => void;
-  setPlaylist: (list: PlaylistItem[]) => void;
+  setPlaylist: (list: PlaylistItem[], index?: number) => void;
   setActiveIndex: (index: number) => void;
   setResizeMode: (mode: ResizeMode) => void;
 };
@@ -132,14 +136,15 @@ type NexenPlayerProps = {
   disablePlaylist?: boolean;
   style?: StyleProp<ViewStyle>;
   theme?: NexenTheme;
+  insets?: EdgeInsets;
   onBackPressed?: () => void;
   onPresentFullScreen?: () => void;
   onDismissFullScreen?: () => void;
   onPlay?: () => void;
   onPaused?: () => void;
   onStopped?: () => void;
-  onSkipNext?: () => void;
-  onSkipBack?: () => void;
+  onSkipNext?: (index: number) => void;
+  onSkipBack?: (index: number) => void;
   onVolumeChanged?: (volume: number) => void;
   onBrightnessChanged?: (brightness: number) => void;
   onMuteChanged?: (muted: boolean) => void;
@@ -160,6 +165,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       layoutMode,
       title,
       style,
+      insets,
       // repeat,
       // playbackSpeed,
       // volume: playerVolume,
@@ -200,7 +206,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     const [dimension, setDimension] = React.useState({ width: 0, height: 0 });
     const [showControl, setShowControl] = React.useState(false);
     const [showSpeedControl, setShowSpeedControl] = React.useState(false);
-    const [showTrackControl, setShowTrackControl] = React.useState(false);
     const [showPlaylistControl, setShowPlaylistControl] = React.useState(false);
     const [showMoreControl, setShowMoreControl] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
@@ -209,7 +214,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     const [paused, setPaused] = React.useState(true);
     const [muted, setMuted] = React.useState(false);
     const [loop, setLoop] = React.useState(false);
-    // const [playList, setPlayList] = React.useState<{list: PlayListItem[], activeIndex: number}>();
     const [videoList, setVideoList] = React.useState<PlaylistItem[]>();
     const [videoIndex, setVideoIndex] = React.useState(0);
     const [resizeModeIndex, setResizeModeIndex] = React.useState(0);
@@ -218,42 +222,27 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     const [volume, setVolume] = React.useState(80);
     const [brightness, setBrightness] = React.useState(40);
 
-    const [status, setStatus] = React.useState<AVPlaybackStatusToSet>();
-    // const [reloadCounter, setReloadCounter] = React.useState(0);
-    // const [source, setSource] = React.useState(src);
-
-    const appState = React.useRef(AppState.currentState);
-    const isFullscreen = React.useRef(fullScreen);
-
-    // const videoVolume = React.useRef(volume);
-    // const videoBrightness = React.useRef(brightness);
-
     const [trackInfo, setTrackInfo] = React.useState({
       trackTime: 0,
       totalTrackTime: 0,
       cachedTrackTime: 0,
     });
 
-    React.useEffect(() => {
-      // if (videoList) {
-      //   console.log(`videoList: ${JSON.stringify(videoList)}`);
-      // }
-      
-      // setSource(src);
-    }, [videoList]);
-    // const [totalTrackTime, setTotalTrackTime] = React.useState(0);
-    // const [cachedTrackTime, setCachedTrackTime] = React.useState(0);
-    // const [trackTime, setTrackTime] = React.useState(0);
     const durationTime = React.useRef(0);
     const cachedTime = React.useRef(0);
     const currentTime = React.useRef(0);
-
+    
     const isSeeking = React.useRef(false);
     const isSliding = React.useRef(false);
     const isSeekable = React.useRef(false);
     const gestureEnabled = React.useRef(false);
     const isStopped = React.useRef(false);
-    // const layoutOption = React.useRef(layoutMode);
+    const isVolumeSeekable = React.useRef(true);
+    const isFullscreen = React.useRef(fullScreen);
+    
+    const moreControlRef = React.useRef<WrapperComponentRef>(null);
+    const speedControlRef = React.useRef<WrapperComponentRef>(null);
+    const playlistControlRef = React.useRef<WrapperComponentRef>(null);
 
     const videoRef = React.useRef<Video>(null);
     const tipViewRef = React.useRef<TipViewRef>(null);
@@ -264,21 +253,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     const headerTopMargin = React.useRef(new Animated.Value(-60)).current;
     const footerOpacity = React.useRef(new Animated.Value(0)).current;
     const footerBottomMargin = React.useRef(new Animated.Value(-60)).current;
-
-    const speedOpacity = React.useRef(new Animated.Value(0)).current;
-    const speedBottomMargin = React.useRef(
-      new Animated.Value(-dimension.height * 0.25)
-    ).current;
-
-    const trackOpacity = React.useRef(new Animated.Value(0)).current;
-    const trackBottomMargin = React.useRef(
-      new Animated.Value(-dimension.height * 0.25)
-    ).current;
-
-    const moreOpacity = React.useRef(new Animated.Value(0)).current;
-    const moreRightMargin = React.useRef(
-      new Animated.Value(-dimension.width * 0.45)
-    ).current;
 
     const controlTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -298,11 +272,15 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       skipBack: () => {
         onVideoSkipBack();
       },
+      reload: () => {
+        handleReloadVideo();
+      },
       setLoop: (loop: boolean) => {
         setLoop(loop);
       },
       setMuted: (mute: boolean) => {
         setMuted(mute);
+        isVolumeSeekable.current = !muted;
       },
       setVolume: (volume: number) => {
         setVolume(volume);
@@ -313,13 +291,25 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       setPlaybackSpeed: (speed: number) => {
         setSpeed(speed);
       },
-      setPlaylist: (list: PlaylistItem[]) => {
+      setPlaylist: (list: PlaylistItem[], index: number= 0) => {
         setVideoList(list);
+        if (index >= 0 && index < list.length) {
+          setVideoIndex(index);
+        }
       },
       setActiveIndex: (index: number) => {
         if (videoList) {
           if (index >= 0 && index < videoList.length) {
-            return setVideoIndex(index);
+            videoRef.current?.unloadAsync().then(() => {
+              setTrackInfo({
+                trackTime: 0,
+                totalTrackTime: 0,
+                cachedTrackTime: 0,
+              });
+              videoRef.current?.loadAsync({ uri: videoList![index].source}).then(() => {
+                setVideoIndex(index);
+              });
+            });
           }
         }
       },
@@ -398,6 +388,20 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       nexenTheme?.colors?.modalBackgroundColor ||
       getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.7);
 
+      const minValue = Math.min(
+        Number(dimension.width),
+        Number(dimension.height)
+      );
+      const MORE_CONTROL_CONTAINER_WIDTH = fullScreen
+        ? minValue * 0.55 + insets?.right!
+        : minValue * 0.7;
+        const SPEED_CONTROL_CONTAINER_HEIGHT = fullScreen
+        ? minValue * 0.2 + insets?.bottom!
+        : minValue * 0.3;
+      const PLAYLIST_CONTROL_CONTAINER_HEIGHT = fullScreen
+        ? minValue * 0.3 + insets?.bottom!
+        : minValue * 0.35;
+
     const LINE_SEEK_BAR_HEIGHT = 2;
 
     const rtlMultiplier = React.useRef(1);
@@ -438,15 +442,12 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       const { width: w, height: h } = dimension;
       if (w !== width || h !== height) {
         setDimension({ width, height });
-        console.log(`width: ${width} height: ${height}`);
+        // console.log(`onLayoutChange:: width: ${width} height: ${height}`);
       }
     };
 
     const onTapDetected = React.useCallback(
       async (event: TapEventType, value?: number) => {
-        console.log(
-          `handleScreenTapEvent : ${event} showControl: ${showControl}`
-        );
 
         switch (event) {
           case TapEventType.SINGLE_TAP:
@@ -457,11 +458,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
             }
             if (showSpeedControl) {
               hidePlaybackSpeedControl();
-              gestureEnabled.current = true;
-              break;
-            }
-            if (showTrackControl) {
-              hideSubtitleTrackControl();
               gestureEnabled.current = true;
               break;
             }
@@ -497,10 +493,9 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       },
       [
         showControl,
-        showSpeedControl,
-        showTrackControl,
-        showPlaylistControl,
         showMoreControl,
+        showSpeedControl,
+        showPlaylistControl,
         paused,
       ]
     );
@@ -592,7 +587,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     const setControlTimeout = () => {
       controlTimeoutRef.current = setTimeout(() => {
-        // setShowControl(prevState => !prevState);
         hideMainControl();
       }, controlTimeoutDelay);
     };
@@ -613,43 +607,9 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const hideMoreOptions = () => {
-      startMoreControlHideAnimation(() => {
+      moreControlRef.current?.hide(() => {
         setShowMoreControl(false);
       });
-    };
-
-    const startMoreControlShowAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(moreOpacity, {
-          toValue: 1,
-          duration: ANIMATION_MORE_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(moreRightMargin, {
-          toValue: 0,
-          duration: ANIMATION_MORE_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
-    };
-
-    const startMoreControlHideAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(moreOpacity, {
-          toValue: 0,
-          duration: ANIMATION_MORE_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(moreRightMargin, {
-          toValue: -dimension.width * 0.45,
-          duration: ANIMATION_MORE_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
     };
 
     const showPlaybackSpeedControl = () => {
@@ -657,97 +617,19 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const hidePlaybackSpeedControl = () => {
-      startSpeedControlHideAnimation(() => {
+      speedControlRef.current?.hide(() => {
         setShowSpeedControl(false);
       });
     };
-
-    const startSpeedControlShowAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(speedOpacity, {
-          toValue: 1,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(speedBottomMargin, {
-          toValue: 0,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
-    };
-
-    const startSpeedControlHideAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(speedOpacity, {
-          toValue: 0,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(speedBottomMargin, {
-          toValue: -dimension.height * 0.25,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
-    };
-
-    const showSubtitleTrackControl = () => {
-      setShowTrackControl(true);
-    };
-
-    const hideSubtitleTrackControl = () => {
-      startTrackControlHideAnimation(() => {
-        setShowTrackControl(false);
-      });
-    };
-
+    
     const showVideoListControl = () => {
       setShowPlaylistControl(true);
     };
 
     const hideVideoListControl = () => {
-      startTrackControlHideAnimation(() => {
+      playlistControlRef.current?.hide(() => {
         setShowPlaylistControl(false);
       });
-    };
-
-    const startTrackControlShowAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(trackOpacity, {
-          toValue: 1,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(trackBottomMargin, {
-          toValue: 0,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
-    };
-
-    const startTrackControlHideAnimation = (
-      callback?: Animated.EndCallback | undefined
-    ) => {
-      Animated.parallel([
-        Animated.timing(trackOpacity, {
-          toValue: 0,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(trackBottomMargin, {
-          toValue: -dimension.height * 0.25,
-          duration: ANIMATION_SPEED_DURATION,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]).start(callback);
     };
 
     const startControlShowAnimation = (
@@ -805,19 +687,12 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     React.useEffect(() => {
-      // console.log(
-      //   `useEffect: showControls: ${showControl} volume: ${videoVolume.current} brightness: ${videoBrightness.current} layoutMode: ${layoutMode} loop:${loop} speed: ${speed}`
-      // );
-      // console.log(
-      //   `useEffect: isSeekable: ${isSeekable.current} isSeeking: ${isSeeking.current} gestureEnabled: ${gestureEnabled.current}`
-      // );
       if (showControl) {
         startControlShowAnimation();
         if (controlHideMode && controlHideMode == 'auto') {
           setControlTimeout();
         }
       } else {
-        // hideControlAnimation();
         if (controlHideMode && controlHideMode == 'auto') {
           clearControlTimeout();
         }
@@ -865,25 +740,23 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     }, [showControl, fullScreen, locked, volume, brightness, layoutMode]);
 
     React.useEffect(() => {
-      // console.log(`useEffect: showMoreOptions: ${showMoreOptions} showSpeedControl: ${showSpeedControl}`);
       if (showMoreControl) {
-        startMoreControlShowAnimation();
+        moreControlRef.current?.show();
         return;
       }
 
       if (showSpeedControl) {
-        startSpeedControlShowAnimation();
+        speedControlRef.current?.show();
         return;
       }
 
-      if (showTrackControl || showPlaylistControl) {
-        startTrackControlShowAnimation();
+      if (showPlaylistControl) {
+        playlistControlRef.current?.show();
         return;
       }
     }, [
       showMoreControl,
       showSpeedControl,
-      showTrackControl,
       showPlaylistControl,
     ]);
 
@@ -891,11 +764,9 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       currentTime.current = trackInfo.trackTime;
       cachedTime.current = trackInfo.cachedTrackTime;
       durationTime.current = trackInfo.totalTrackTime;
-      // console.log(`trackInfo:: ${JSON.stringify(trackInfo)}`);
     }, [trackInfo]);
 
     React.useEffect(() => {
-      // console.log(`onAspectRatioChanged: ${resizeModeIndex}`);
       if (isSeekable.current) {
         tipViewRef.current?.updateState({
           showTip: true,
@@ -909,40 +780,15 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       isFullscreen.current = fullScreen;
     }, [fullScreen]);
 
-    // React.useEffect(() => {
-    //   console.log(`layoutMode: ${layoutMode}`);
-    //   layoutOption.current = layoutMode;
-    // }, [layoutMode]);
-
     React.useEffect(() => {
-      // console.log(`WW: ${ww} WH: ${wh}`);
-      // Orientation.lockToPortrait();
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
         onBackPress
-      );
-      const subscription = AppState.addEventListener(
-        'change',
-        (nextAppState) => {
-          if (
-            appState.current.match(/inactive|background/) &&
-            nextAppState === 'active'
-          ) {
-            // console.log(`App has come to the foreground! isFullscreen: ${isFullscreen.current}`);
-            if (isFullscreen.current) {
-              // NexenPlayerModule.hideSystemBar();
-            }
-          }
-          appState.current = nextAppState;
-        }
       );
       return () => {
         if (backHandler) {
           backHandler.remove();
         }
-        // if (subscription) {
-        //   subscription.remove();
-        // }
         if (controlTimeoutRef.current) {
           clearTimeout(controlTimeoutRef.current);
         }
@@ -950,7 +796,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     }, []);
 
     const onBackPress = React.useCallback(() => {
-      console.log(`onBackPress: ${fullScreen}`);
       if (fullScreen) {
         setFullScreen(false);
         onDismissFullScreen?.();
@@ -1003,27 +848,12 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           case 'repeat':
             hideMoreOptions();
             gestureEnabled.current = true;
-            tipViewRef.current?.updateState({
-              showTip: true,
-              tipText: !loop ? 'Repeat On' : 'Repeat Off',
-              autoHide: true,
-              withIcon: true,
-              icon: (
-                <IconRepeat
-                  size={TIP_VIEW_ICON_SIZE}
-                  color={TIP_VIEW_ICON_COLOR}
-                />
-              ),
-            });
-            setLoop((prevState) => !prevState);
+            handleRepeatVideo();
             break;
           case 'reload':
             hideMoreOptions();
             gestureEnabled.current = true;
-            videoRef.current?.unloadAsync().then(() => {
-              videoRef.current?.loadAsync(videoList ? { uri: videoList[videoIndex].source } : source, {shouldPlay: !paused}).then(() => {
-              });
-            });
+            handleReloadVideo();
             break;
           case 'playlist':
             hideMoreOptions();
@@ -1037,7 +867,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     const onSpeedChange = React.useCallback((value: string) => {
       const newSpeed = Number(value);
-      // console.log(`onSpeedChange: speed: ${speed} newSpeed: ${newSpeed}`);
       tipViewRef.current?.updateState({
         showTip: true,
         tipText: `${newSpeed}x Speed`,
@@ -1051,7 +880,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     const handleDoubleTapPlayPause = () => {
       if (paused) {
-        // playerRef.current?.play();
         setPaused(false);
         onPlay?.();
         tipViewRef.current?.updateState({
@@ -1064,7 +892,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           ),
         });
       } else {
-        // playerRef.current?.pause();
         setPaused(true);
         onPaused?.();
         tipViewRef.current?.updateState({
@@ -1087,13 +914,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       onPlay?.();
     };
 
-    const onCcPress = () => {
-      console.log(`onCcPress`);
-      hideMainControl();
-      showSubtitleTrackControl();
-      gestureEnabled.current = false;
-    };
-
     const onStopPress = () => {
       console.log(`onStopPress`);
       // isStopped.current = false;
@@ -1101,14 +921,43 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const handleStopPlayback = () => {
+      console.log(`handleStopPlayback`);
       isStopped.current = true;
       videoRef.current?.setStatusAsync({ positionMillis: 0 });
       setPaused(true);
       onStopped?.();
     };
 
+    const handleRepeatVideo = () => {
+      tipViewRef.current?.updateState({
+        showTip: true,
+        tipText: !loop ? 'Repeat On' : 'Repeat Off',
+        autoHide: true,
+        withIcon: true,
+        icon: (
+          <IconRepeat
+            size={TIP_VIEW_ICON_SIZE}
+            color={TIP_VIEW_ICON_COLOR}
+          />
+        ),
+      });
+      setLoop((prevState) => !prevState);
+    }
+
+    const handleReloadVideo = () => {
+      videoRef.current?.unloadAsync().then(() => {
+        videoRef.current
+          ?.loadAsync(
+            videoList ? { uri: videoList[videoIndex].source } : source,
+            { shouldPlay: !paused }
+          )
+          .then(() => {
+            console.log(`reloaded!!`)
+          });
+      });
+    }
+
     const onRewind = () => {
-      // console.log(`onRewind`);
       const time = trackInfo.trackTime - FORWARD_OR_REWIND_DURATION;
       videoRef.current?.setStatusAsync({ positionMillis: time * 1000 });
       setTrackInfo((prevState) => {
@@ -1120,7 +969,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const onFastForward = () => {
-      // console.log(`onFastForward`);
       const time = trackInfo.trackTime + FORWARD_OR_REWIND_DURATION;
       videoRef.current?.setStatusAsync({ positionMillis: time * 1000 });
       setTrackInfo((prevState) => {
@@ -1132,44 +980,69 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const onVideoSkipNext = () => {
-      console.log(`onVideoSkipNext: ${videoIndex}`);
       if (videoList) {
         if (videoIndex! < videoList.length - 1) {
-          const index = videoIndex + 1;
-          setVideoIndex(index);
-          onPlaylistItemSelected?.(index);
-          onSkipNext?.();
+          videoRef.current?.unloadAsync().then(() => {
+            setTrackInfo({
+              trackTime: 0,
+              totalTrackTime: 0,
+              cachedTrackTime: 0,
+            });
+            const index = videoIndex + 1;
+            videoRef.current?.loadAsync({ uri: videoList![index].source}).then(() => {
+              setVideoIndex(index);
+              onSkipNext?.(index);
+            });
+          });
         }
       }
     };
 
     const onVideoSkipBack = () => {
-      console.log(`onVideoSkipBack: ${videoIndex}`);
       if (videoList) {
         if (videoIndex > 0) {
-          const index = videoIndex - 1;
-          setVideoIndex(index);
-          onPlaylistItemSelected?.(index);
-          onSkipBack?.();
+          videoRef.current?.unloadAsync().then(() => {
+            setTrackInfo({
+              trackTime: 0,
+              totalTrackTime: 0,
+              cachedTrackTime: 0,
+            });
+            const index = videoIndex - 1;
+            videoRef.current?.loadAsync({ uri: videoList![index].source}).then(() => {
+              setVideoIndex(index);
+              onSkipBack?.(index);
+            });
+          });
         }
       }
     };
     const onVideoListPress = () => {
-      console.log(`onVideoListPress`);
       hideMainControl();
-      showVideoListControl();
+      // showVideoListControl();
+      playlistControlRef.current?.show();
       gestureEnabled.current = false;
     };
 
-    const onPlayListItemPress = (index: number) => {
-      console.log(`onPlayListItemPress: ${index}`);
-      setVideoIndex(index);
-      setPaused(false);
-      onPlaylistItemSelected?.(index);
+    const onPlaylistItemPress = (index: number) => {
+      if (videoIndex !== index) {
+        videoRef.current?.unloadAsync().then(() => {
+          setTrackInfo({
+            trackTime: 0,
+            totalTrackTime: 0,
+            cachedTrackTime: 0,
+          });
+          setPaused(false);
+          onPlay?.();
+          videoRef.current?.loadAsync({ uri: videoList![index].source })
+            .then(() => {
+              setVideoIndex(index);
+              onPlaylistItemSelected?.(index);
+            });
+        });
+      }
     };
 
     const onTogglePlayPause = () => {
-      console.log(`onTogglePlayPause :: ${paused}`);
       if (paused) {
         onPlay?.();
       } else {
@@ -1179,52 +1052,39 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     const onToggleFullScreen = () => {
-      console.log(`onToggleFullScreen :: ${fullScreen}`);
       if (fullScreen) {
         onDismissFullScreen?.();
-        // videoRef?.current?.dismissFullscreenPlayer();
-        // Orientation.lockToPortrait();
-        // StatusBar.setHidden(false, 'fade');
-        // NexenPlayerModule.showSystemBar();
       } else {
         onPresentFullScreen?.();
-        // videoRef?.current?.presentFullscreenPlayer();
-        // Orientation.lockToLandscape();
-        // StatusBar.setHidden(true, 'fade');
-        // NexenPlayerModule.hideSystemBar();
       }
       setFullScreen((prevState) => !prevState);
     };
 
     const onToggleVolume = () => {
-      console.log(`onToggleVolume :muted: ${muted}`);
-      // playerRef.current?.muted(!muted);
       tipViewRef.current?.updateState({
         showTip: true,
         tipText: !muted ? 'Sound Off' : 'Sound On',
         autoHide: true,
       });
+      isVolumeSeekable.current = !(!muted);
       onMuteChanged?.(!muted);
       setMuted((prevState) => !prevState);
     };
 
     /* Slide Button Callback */
     const onSlideStart = React.useCallback(() => {
-      // console.log(`onSlideStart`);
       isSliding.current = true;
     }, []);
 
     const onSlideEnd = React.useCallback(() => {
-      // console.log(`onSlideEnd`);
       isSliding.current = false;
     }, []);
 
     const onReachedToStart = React.useCallback(() => {
-      // console.log(`onReachedToStart`);
+
     }, []);
 
     const onReachedToEnd = React.useCallback(() => {
-      console.log(`onReachedToEnd`);
       setLocked(false);
       isSeekable.current = true;
       gestureEnabled.current = true;
@@ -1242,7 +1102,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     /* SeekBar Callback */
     const onSeekStart = React.useCallback(
       (value: number, totalValue: number) => {
-        console.log(`onSeekStart :: ${value}`);
         isSeeking.current = true;
         tipViewRef.current?.updateState({
           showTip: true,
@@ -1255,7 +1114,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     const onSeekUpdate = React.useCallback(
       (value: number, totalValue: number) => {
-        // console.log(`onSeekUpdate :: ${time}`);
         if (isSeeking.current) {
           tipViewRef.current?.updateState({
             tipText: getTimeTipText(value, totalValue),
@@ -1266,10 +1124,8 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     );
 
     const onSeekEnd = React.useCallback((value: number) => {
-      console.log(`onSeekEnd :: ${value}`);
       isSeeking.current = false;
       videoRef.current?.setStatusAsync({ positionMillis: value * 1000 });
-      // videoRef.current?.setNativeProps({status: {positionMillis: value * 1000}});
       setTrackInfo((prevState) => {
         return { ...prevState, trackTime: value };
       });
@@ -1314,12 +1170,11 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     /* VLCPlayer Callback */
 
     const onLoadStart = React.useCallback(() => {
-      console.log(`onLoadStart!!: called`);
       setLoading(true);
     }, []);
 
     const onLoad = React.useCallback((status: AVPlaybackStatus) => {
-      // console.log(`onLoad!!: ${JSON.stringify(status)}`);
+      console.log(`onLoad!!: ${JSON.stringify(status)}`);
       setLoading(false);
       setError(!status.isLoaded);
       if (status.isLoaded) {
@@ -1339,8 +1194,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     const onPlaybackStatusUpdate = React.useCallback(
       (status: AVPlaybackStatus) => {
         // console.log(`onPlaybackStatusUpdate!!: ${JSON.stringify(status)}`);
-        // setLoading(true);
-        // setVolume(Math.abs(e.volume));
         if (status.isLoaded) {
           if (!isSeeking.current) {
             setTrackInfo({
@@ -1350,8 +1203,16 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
             });
           }
 
-          if (status.didJustFinish) {
-            handleStopPlayback();
+          if (!status.isLooping && status.didJustFinish) {
+            if (videoList) {
+              if (videoIndex! < videoList.length - 1) {
+                onVideoSkipNext();
+              } else {
+                handleStopPlayback();
+              }
+            } else {
+              handleStopPlayback();
+            }
           }
         }
       },
@@ -1367,69 +1228,14 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     const onFullscreenUpdate = React.useCallback(
       (event: VideoFullscreenUpdateEvent) => {
-        console.log(`onPlaybackRateChange!!: ${JSON.stringify(event)}`);
+        // console.log(`onPlaybackRateChange!!: ${JSON.stringify(event)}`);
       },
       []
-    );
-
-    const onTimedMetadata = React.useCallback((meta: any[]) => {
-      console.log(`onTimedMetadata!!: ${JSON.stringify(meta)}`);
-    }, []);
-
-    const onBuffer = React.useCallback((data: any) => {
-      console.log(`onBuffer: ${JSON.stringify(data)}`);
-      // const { length, time, buffer } = e;
-      // if (buffer == 0 && length >= 0 && time >= 0) {
-      //   setLoading(true);
-      // }
-      // if (buffer == 100 && length > 0 && time >= 0) {
-      //   setLoading(false);
-      // }
-    }, []);
-
-    /* const onProgress = React.useCallback((data: OnProgressData) => {
-    // console.log(`onProgress: ${JSON.stringify(data)}`);
-    if (!isSeeking.current) {
-      // setTrackTime(data.currentTime);
-      setTrackInfo({
-        trackTime: data.currentTime,
-        cachedTrackTime: data.playableDuration,
-        totalTrackTime: data.seekableDuration,
-      });
-    }
-  }, []);
-
-  const onSeek = React.useCallback((data: OnSeekData) => {
-    console.log(`onSeek: ${JSON.stringify(data)}`);
-    if (isStopped.current && data.seekTime == 0 && data.currentTime == 0) {
-      setTrackInfo((prevState) => {
-        return {
-          ...prevState,
-          trackTime: 0,
-          cachedTrackTime: 0,
-        };
-      });
-      // setPaused(true);
-    }
-  }, []);
-
-  const onEnd = React.useCallback(() => {
-    console.log(`onEnd: called`);
-    handleStopPlayback();
-  }, []); */
+    );    
 
     const onError = React.useCallback((error: string) => {
       console.log(`onError: ${JSON.stringify(error)}`);
       setError(true);
-    }, []);
-
-    const onAspectRatioChanged = React.useCallback((e: any) => {
-      // console.log(`onVideoScaleChanged: ${JSON.stringify(e)}`);
-      tipViewRef.current?.updateState({
-        showTip: true,
-        tipText: getAspectRatioTipText(e.aspectRatio),
-        autoHide: true,
-      });
     }, []);
 
     const playerStyle: StyleProp<ViewStyle> = fullScreen
@@ -1462,7 +1268,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           isLooping={loop}
           rate={speed}
           resizeMode={getKeyByValue(RESIZE_MODE_VALUES[resizeModeIndex]!)}
-          // status={status}
+          progressUpdateIntervalMillis={500}
           onLoadStart={onLoadStart}
           onLoad={onLoad}
           onPlaybackStatusUpdate={onPlaybackStatusUpdate}
@@ -1482,6 +1288,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           durationTime={durationTime}
           currentTime={currentTime}
           layoutMode={layoutMode}
+          dimension={dimension}
           volume={volume}
           brightness={brightness}
           nexenTheme={nexenTheme}
@@ -1503,6 +1310,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               locked={locked}
               nexenTheme={nexenTheme}
               layoutMode={layoutMode}
+              insets={insets}
               disableBack={disableBack}
               disableRatio={disableRatio}
               disableMore={disableMore}
@@ -1523,8 +1331,10 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               locked={locked}
               nexenTheme={nexenTheme}
               layoutMode={layoutMode}
+              insets={insets}
               paused={paused}
               isSeekable={isSeekable}
+              isVolumeSeekable={isVolumeSeekable}
               trackTime={trackInfo.trackTime}
               cachedTrackTime={trackInfo.cachedTrackTime}
               totalTrackTime={trackInfo.totalTrackTime}
@@ -1559,7 +1369,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           {!showControl &&
             !showMoreControl &&
             !showSpeedControl &&
-            !showTrackControl && (
+            !showPlaylistControl && (
               <LineSeekBar
                 trackTime={trackInfo.trackTime}
                 totalTrackTime={trackInfo.totalTrackTime}
@@ -1570,11 +1380,18 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
           {showMoreControl && (
             <MoreControl
-              style={{ width: dimension.width * 0.45 }}
-              opacity={moreOpacity}
-              marginRight={moreRightMargin}
+              ref={moreControlRef}
+              animateFrom={'RIGHT'}
+              distance={MORE_CONTROL_CONTAINER_WIDTH}
+              style={{ 
+                width: MORE_CONTROL_CONTAINER_WIDTH,
+                backgroundColor: CONTAINER_BACKGROUND_COLOR,
+                borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
+                borderBottomLeftRadius: CONTAINER_BORDER_RADIUS,
+               }}
               fullScreen={fullScreen}
               disablePlaylist={disablePlaylist}
+              insets={insets}
               nexenTheme={nexenTheme}
               onItemPress={onMoreItemPress}
             />
@@ -1582,58 +1399,46 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
           {showSpeedControl && (
             <SpeedControl
+              ref={speedControlRef}
+              animateFrom={'BOTTOM'}
+              distance={SPEED_CONTROL_CONTAINER_HEIGHT}
               style={{
-                // height: dimensions.height * 0.35,
+                height: SPEED_CONTROL_CONTAINER_HEIGHT,
                 backgroundColor: CONTAINER_BACKGROUND_COLOR,
                 borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
                 borderTopRightRadius: CONTAINER_BORDER_RADIUS,
               }}
-              opacity={speedOpacity}
-              marginBottom={speedBottomMargin}
+              fullScreen={fullScreen}
+              insets={insets}
               currentSpeed={speed}
               nexenTheme={nexenTheme}
               onSpeedChange={onSpeedChange}
             />
           )}
 
-          {/* showTrackControl && (
-            <TrackControl
-              style={{
-                height: dimension.height * 0.5,
-                backgroundColor: CONTAINER_BACKGROUND_COLOR,
-                borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
-                borderTopRightRadius: CONTAINER_BORDER_RADIUS,
-              }}
-              opacity={trackOpacity}
-              marginBottom={trackBottomMargin}
-              fullScreen={fullScreen}
-              nexenTheme={nexenTheme}
-            />
-          ) */}
-
           {showPlaylistControl && (
             <PlaylistControl
+              ref={playlistControlRef}
+              animateFrom={'BOTTOM'}
+              distance={PLAYLIST_CONTROL_CONTAINER_HEIGHT}
               style={{
-                // height: dimensions.height * 0.25,
+                height: PLAYLIST_CONTROL_CONTAINER_HEIGHT,
                 backgroundColor: CONTAINER_BACKGROUND_COLOR,
                 borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
                 borderTopRightRadius: CONTAINER_BORDER_RADIUS,
               }}
-              opacity={trackOpacity}
-              marginBottom={trackBottomMargin}
-              playList={videoList}
-              playListIndex={videoIndex}
+              playlist={videoList}
+              playlistIndex={videoIndex}
               fullScreen={fullScreen}
               nexenTheme={nexenTheme}
-              dimension={dimension}
-              onPlayListItemPress={onPlayListItemPress}
+              insets={insets}
+              onPlaylistItemPress={onPlaylistItemPress}
             />
           )}
 
           {!showControl &&
             !showMoreControl &&
             !showSpeedControl &&
-            !showTrackControl &&
             !showPlaylistControl &&
             !loading &&
             !locked &&
@@ -1676,7 +1481,6 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 export default NexenPlayer;
 
 NexenPlayer.defaultProps = {
-  // source: {uri: '', type: 'ASSET'},
   doubleTapTime: 300,
   // doubleTapPlayPause: true,
   controlTimeout: 5000,
@@ -1698,6 +1502,12 @@ NexenPlayer.defaultProps = {
   disableVolume: false,
   disableFullscreen: false,
   disablePlaylist: false,
+  insets: {
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+  },
 };
 
 const styles = StyleSheet.create({
@@ -1705,15 +1515,13 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     height: '100%',
-    // flex: 1,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'pink',
+    backgroundColor: '#0a0a0a',
   },
   player: {
     width: '100%',
     height: '100%',
-    // backgroundColor: 'red',
   },
 });

@@ -14,8 +14,6 @@ export interface IconTagViewTheme extends TagViewTheme {
 }
 
 type IconTagViewProps = {
-  // fullScreen: boolean;
-  // disableLargeMode?: boolean;
   theme?: IconTagViewTheme;
   style?: StyleProp<ViewStyle>;
 };
@@ -60,7 +58,6 @@ const IconTagView = React.forwardRef<IconTagViewRef, IconTagViewProps>(
       borderRadius: theme?.cornerRadius,
       borderWidth: theme?.borderWidth,
       borderColor: theme?.borderColor,
-      // paddingHorizontal: CONTAINER_PADDING,
     };
 
     return (

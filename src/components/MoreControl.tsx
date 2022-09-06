@@ -1,8 +1,6 @@
 import React from 'react';
 import {
-  Animated,
   FlatList,
-  GestureResponderEvent,
   ListRenderItemInfo,
   StyleProp,
   StyleSheet,
@@ -12,7 +10,6 @@ import {
   ViewStyle,
 } from 'react-native';
 import type { NexenTheme } from '../utils/Theme';
-import { getAlphaColor } from '../utils/ColorUtil';
 import {
   IconFilm,
   IconInfo,
@@ -22,44 +19,45 @@ import {
   IconZap,
 } from './../../assets/icons';
 import GradientView from './GradientView';
+import { EdgeInsets } from './NexenPlayer';
+import { withAnimation } from '../hoc/withAnimation';
+import ModalView from './ModalView';
 
 export type MoreItem = {
   id: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
   label: string;
-  // onPress: () => void;
 };
 
 type MoreControlProps = {
-  opacity: Animated.Value;
-  marginRight: Animated.Value;
   fullScreen: boolean;
   disablePlaylist?: boolean;
   nexenTheme?: NexenTheme;
+  insets?: EdgeInsets;
   style?: StyleProp<ViewStyle>;
   onItemPress?: (item: MoreItem) => void;
 };
 
 const MoreControl = (props: MoreControlProps) => {
   const {
-    opacity,
-    marginRight,
     style,
     fullScreen,
     disablePlaylist,
+    insets,
     nexenTheme,
     onItemPress,
   } = props;
+
   const [moreItems, setMoreItems] = React.useState<MoreItem[]>([]);
-  const ICON_SIZE = fullScreen ? 24 : 20;
+  const ICON_SIZE = nexenTheme?.sizes?.secondaryIconSize;
   const ICON_COLOR = nexenTheme?.colors?.secondaryIconColor;
   const TEXT_COLOR = nexenTheme?.colors?.secondaryTextColor;
-  const CONTAINER_BACKGROUND_COLOR = getAlphaColor(
-    nexenTheme?.colors?.primaryColor!,
-    0.7
-  );
-  const CONTAINER_BORDER_RADIUS = nexenTheme?.sizes?.modalCornerRadius;
-  // console.log(`CONTAINER_BORDER_RADIUS: ${CONTAINER_BORDER_RADIUS}`)
+
+  const CONTAINER_VERTICAL_PADDING = fullScreen 
+    ? (insets?.top! + insets?.bottom!) / 2 > 0 
+    ? (insets?.top! + insets?.bottom!) / 2
+    : nexenTheme?.sizes?.paddingVertical
+    : nexenTheme?.sizes?.paddingVertical;
 
   React.useEffect(() => {
     const MORE_ITEMS = [
@@ -101,11 +99,11 @@ const MoreControl = (props: MoreControlProps) => {
   }, [disablePlaylist]);
 
   const containerStyle = {
-    opacity,
-    marginRight,
-    backgroundColor: CONTAINER_BACKGROUND_COLOR,
-    borderTopLeftRadius: CONTAINER_BORDER_RADIUS,
-    borderBottomLeftRadius: CONTAINER_BORDER_RADIUS,
+    top: CONTAINER_VERTICAL_PADDING,
+    bottom: CONTAINER_VERTICAL_PADDING,
+    right: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   };
 
   const itemTextStyle = {
@@ -119,8 +117,7 @@ const MoreControl = (props: MoreControlProps) => {
         style={styles.itemContainer}
         activeOpacity={0.6}
         onPress={() => {
-          onItemPress && onItemPress(item);
-          // console.log(`item: ${item.id}`)
+          onItemPress?.(item);
         }}
       >
         {item.icon}
@@ -129,7 +126,7 @@ const MoreControl = (props: MoreControlProps) => {
     );
   };
   return (
-    <Animated.View style={[styles.container, style, containerStyle]}>
+    <ModalView style={[styles.container, style, containerStyle]}>
       <GradientView
         style={{
           height: '100%',
@@ -148,25 +145,18 @@ const MoreControl = (props: MoreControlProps) => {
           renderItem={renderMoreItem}
         />
       </TouchableOpacity>
-    </Animated.View>
+    </ModalView>
   );
 };
 
-export default MoreControl;
+export default withAnimation(MoreControl);
 
 MoreControl.defaultProps = {
-  iconSize: 24,
-  iconColor: '#fafafa',
+
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: 8,
-    right: 0,
-    bottom: 8,
-    minWidth: 168,
-    maxWidth: 220,
     zIndex: 110,
     overflow: 'hidden',
   },

@@ -79,7 +79,6 @@ const VolumeTagView = (props: VolumeTagViewProps) => {
 
   const onSeekStart = React.useCallback(
     (value: number, totalValue: number, position: number) => {
-      console.log(`onSeekStart :: ${value}`);
       setVolume(value);
       onVolumeSeekStart?.(value, totalValue, position);
     },
@@ -96,7 +95,6 @@ const VolumeTagView = (props: VolumeTagViewProps) => {
 
   const onSeekEnd = React.useCallback(
     (value: number, totalValue: number, position: number) => {
-      // console.log(`onSeekEnd :: ${value}`);
       setVolume(value);
       onVolumeSeekEnd?.(value, totalValue, position);
     },
@@ -104,7 +102,6 @@ const VolumeTagView = (props: VolumeTagViewProps) => {
   );
 
   const onToggleVolume = () => {
-    // console.log(`onToggleVolume :muted: ${muted}`);
     onVolumePress?.();
   };
 
@@ -148,7 +145,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   seek: {
-    // width: 90,
     paddingVertical: 3,
   },
 });

@@ -18,24 +18,14 @@ import {
   seekToTrackValue,
   trackToSeekValue,
 } from '../utils/MathUtil';
-import { getAlphaColor } from '../utils/ColorUtil';
 import type { TrackSeekBarTheme } from '../utils/Theme';
 
-export interface SeekBarTheme extends TrackSeekBarTheme {
-  // thumbRadius?: number;
-  // thumbBorderRadius?: number;
-  // seekBarHeight?: number;
-}
+export interface SeekBarTheme extends TrackSeekBarTheme {}
 
 type SeekBarProps = {
   trackValue: number;
   totalTrackValue: number;
   cachedTrackValue?: number;
-  // thumbSize?: number;
-  // thumbBorderWidth?: number;
-  // thumbRadius?: number;
-  // thumbBorderRadius?: number;
-  // seekBarHeight?: number;
   isSeekable?: React.MutableRefObject<boolean>;
   disableCachedTrack?: boolean;
   disableThumbBorder?: boolean;
@@ -46,16 +36,8 @@ type SeekBarProps = {
   onSeekEnd?: (value: number, totalValue: number, position: number) => void;
 };
 
-
 const SeekBar = (props: SeekBarProps) => {
-  // console.log(`Seekbar:: renders`);
-
   const {
-    // thumbSize,
-    // thumbBorderWidth,
-    // thumbRadius,
-    // thumbBorderRadius,
-    // seekBarHeight,
     disableCachedTrack,
     disableThumbBorder,
     trackValue,
@@ -69,10 +51,6 @@ const SeekBar = (props: SeekBarProps) => {
     isSeekable,
   } = props;
 
-  // console.log(
-  //   `SeekbarProps: trackTime: ${trackTime} totalTrackTime: ${totalTrackTime}`,
-  // );
-
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
 
   const rtlMultiplier = React.useRef(1);
@@ -82,7 +60,6 @@ const SeekBar = (props: SeekBarProps) => {
   const THUMB_BORDER_SIZE = theme?.thumbSize! + theme?.thumbBorderWidth!;
   const PADDING = THUMB_BORDER_SIZE / 2;
 
-  // const thumbBorderRef = React.useRef<View>(null);
   const duration = React.useRef(0);
   const buffer = React.useRef(0);
   const progress = React.useRef(0);
@@ -107,32 +84,34 @@ const SeekBar = (props: SeekBarProps) => {
   React.useEffect(() => {
     seekableDistance.current =
       (dimensions.width - PADDING * 2) * rtlMultiplier.current;
-    // console.log(
-    //   `dimensions:: ${JSON.stringify(dimensions)} seekableDistance:: ${
-    //     seekableDistance.current
-    //   } PADDING: ${PADDING}`,
-    // );
   }, [dimensions]);
 
   React.useEffect(() => {
     duration.current = totalTrackValue;
     buffer.current = cachedTrackValue || 0;
     progress.current = trackValue;
-    
+
     const position = boundPosition(
-      trackToSeekValue(progress.current, duration.current, seekableDistance.current),
+      trackToSeekValue(
+        progress.current,
+        duration.current,
+        seekableDistance.current
+      ),
       seekableDistance.current
     );
     seekPosition.setValue(position);
     seekWidth.setValue(position * rtlMultiplier.current);
 
     const cachePosition = boundPosition(
-      trackToSeekValue(buffer.current, duration.current, seekableDistance.current),
+      trackToSeekValue(
+        buffer.current,
+        duration.current,
+        seekableDistance.current
+      ),
       seekableDistance.current
     );
     cachedSeekPosition.setValue(cachePosition);
     cachedSeekWidth.setValue(cachePosition * rtlMultiplier.current);
-    // console.log(`Seekbar:: useEffect: tt:${trackTime} ttt: ${totalTrackTime} ctt:: ${cachedTrackTime}`);
   }, [trackValue, cachedTrackValue, totalTrackValue, dimensions]);
 
   const updateBorderOpacity = (value: number) => {
@@ -149,33 +128,15 @@ const SeekBar = (props: SeekBarProps) => {
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => true,
-      // onStartShouldSetPanResponderCapture: (
-      //   e: GestureResponderEvent,
-      //   gestureState: PanResponderGestureState,
-      // ) => {
-      //   if (seekable) return true;
-      //   else return false;
-      // },
       onMoveShouldSetPanResponder: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => true,
-      // onMoveShouldSetPanResponderCapture: (
-      //   e: GestureResponderEvent,
-      //   gestureState: PanResponderGestureState,
-      // ) => {
-      //   if (seekable) return true;
-      //   else return false;
-      // },
       onPanResponderGrant: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
       ) => {
         if (!isSeekable?.current) return;
-        console.log(
-          `SeekBar:panResponder:: handlePanResponderGrant:locationX: ${e.nativeEvent.locationX} pageX: ${e.nativeEvent.pageX} dx: ${gestureState.dx}`,
-        );
-        // console.log(`SeekBar:panResponder: handlePanResponderGrant: trackTime: ${progress.current} totalTrackTime: ${duration.current}`)
 
         const position = boundPosition(
           isRTL
@@ -183,9 +144,7 @@ const SeekBar = (props: SeekBarProps) => {
             : e.nativeEvent.locationX,
           seekableDistance.current
         );
-        // console.log(
-        //   `SeekBar:panResponder:: handlePanResponderGrant : position: ${position}`,
-        // );
+
         seekPosition.setValue(position);
         seekWidth.setValue(position * rtlMultiplier.current);
         if (!disableThumbBorder) {
@@ -193,15 +152,15 @@ const SeekBar = (props: SeekBarProps) => {
         }
         locationX.current = position;
         dx.current = gestureState.dx;
-          onSeekStart?.(
-            seekToTrackValue(
-              position,
-              duration.current,
-              seekableDistance.current
-            ),
+        onSeekStart?.(
+          seekToTrackValue(
+            position,
             duration.current,
-            position
-          );
+            seekableDistance.current
+          ),
+          duration.current,
+          position
+        );
       },
       onPanResponderMove: (
         e: GestureResponderEvent,
@@ -216,40 +175,8 @@ const SeekBar = (props: SeekBarProps) => {
           );
           seekPosition.setValue(position);
           seekWidth.setValue(position * rtlMultiplier.current);
-          // locationX.current = position;
-          // console.log(
-          //   `SeekBar:panResponder:: handlePanResponderMove:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx} position: ${position}`,
-          // );
-            onSeekUpdate?.(
-              seekToTrackValue(
-                position,
-                duration.current,
-                seekableDistance.current
-              ),
-              duration.current,
-              position
-            );
-        }
-      },
-      onPanResponderRelease: (
-        e: GestureResponderEvent,
-        gestureState: PanResponderGestureState
-      ) => {
-        if (!isSeekable?.current) return;
-        // console.log(
-        //   `SeekBar:panResponder:: handlePanResponderRelease:: locationX: ${locationX.current} dx: ${dx.current}`,
-        // );
 
-        if (!disableThumbBorder) {
-          updateBorderOpacity(0);
-        }
-        const position = boundPosition(
-          locationX.current + dx.current,
-          seekableDistance.current
-        );
-        // locationX.current = locationX.current + dx.current;
-        
-          onSeekEnd?.(
+          onSeekUpdate?.(
             seekToTrackValue(
               position,
               duration.current,
@@ -258,6 +185,31 @@ const SeekBar = (props: SeekBarProps) => {
             duration.current,
             position
           );
+        }
+      },
+      onPanResponderRelease: (
+        e: GestureResponderEvent,
+        gestureState: PanResponderGestureState
+      ) => {
+        if (!isSeekable?.current) return;
+
+        if (!disableThumbBorder) {
+          updateBorderOpacity(0);
+        }
+        const position = boundPosition(
+          locationX.current + dx.current,
+          seekableDistance.current
+        );
+
+        onSeekEnd?.(
+          seekToTrackValue(
+            position,
+            duration.current,
+            seekableDistance.current
+          ),
+          duration.current,
+          position
+        );
       },
       onPanResponderTerminationRequest: (
         e: GestureResponderEvent,
@@ -266,19 +218,15 @@ const SeekBar = (props: SeekBarProps) => {
       onPanResponderTerminate: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
-      ) => {
-        // console.log(
-        //   `SeekBar:panResponder:: handlePanResponderTerminate:: locationX: ${e.nativeEvent.locationX} dx: ${gestureState.dx}`,
-        // );
-      },
+      ) => {},
     })
   );
 
   const thumbContainerStyle = {
     width: THUMB_BORDER_SIZE,
     height: THUMB_BORDER_SIZE,
-    transform: [{ translateX: seekPosition }]
-  }
+    transform: [{ translateX: seekPosition }],
+  };
 
   const thumbStyle = {
     height: theme?.thumbSize,
@@ -326,9 +274,7 @@ const SeekBar = (props: SeekBarProps) => {
       {...panResponder.current.panHandlers}
     >
       {/* Duration Bar */}
-      <View
-        style={[styles.totalSeekBar, totalSeekBarStyle]}
-      />
+      <View style={[styles.totalSeekBar, totalSeekBarStyle]} />
       {/* Progress Bar*/}
       <Animated.View
         style={[styles.seekBar, seekBarStyle]}
@@ -343,17 +289,11 @@ const SeekBar = (props: SeekBarProps) => {
       )}
       {/* Seek Bar Thumb */}
       <Animated.View
-        style={[
-          styles.thumbContainer,
-          thumbContainerStyle,
-        ]}
+        style={[styles.thumbContainer, thumbContainerStyle]}
         pointerEvents="none"
       >
         {!disableThumbBorder && (
-          <Animated.View
-          // ref={thumbBorderRef}
-          style={[styles.thumbBorder, thumbBorderStyle]}
-        />
+          <Animated.View style={[styles.thumbBorder, thumbBorderStyle]} />
         )}
         <View style={[thumbStyle]} />
       </Animated.View>
@@ -387,27 +327,27 @@ const styles = StyleSheet.create({
   },
   thumbBorder: {
     position: 'absolute',
-    backgroundColor: 'rgba(250,250,250,0.7)'
+    backgroundColor: 'rgba(250,250,250,0.7)',
   },
   totalSeekBar: {
     zIndex: 10,
     height: 2,
     borderRadius: 1,
     position: 'absolute',
-    backgroundColor: 'rgba(250,250,250,0.3)'
+    backgroundColor: 'rgba(250,250,250,0.3)',
   },
   seekBar: {
     zIndex: 30,
     height: 2,
     borderRadius: 1,
     position: 'absolute',
-    backgroundColor: '#fa5005'
+    backgroundColor: '#fa5005',
   },
   cachedBar: {
     zIndex: 20,
     height: 2,
     borderRadius: 1,
     position: 'absolute',
-    backgroundColor: '#fafafa'
+    backgroundColor: '#fafafa',
   },
 });
