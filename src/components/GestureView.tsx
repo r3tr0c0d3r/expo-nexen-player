@@ -63,6 +63,7 @@ type GestureViewProps = {
   fullScreen: boolean;
   locked: boolean;
   error?: boolean;
+  errorText?: string;
   isSeeking: React.MutableRefObject<boolean>;
   isSliding: React.MutableRefObject<boolean>;
   isSeekable: React.MutableRefObject<boolean>;
@@ -89,6 +90,7 @@ const GestureView = (props: GestureViewProps) => {
     fullScreen,
     locked,
     error,
+    errorText,
     isSeeking,
     isSliding,
     isSeekable,
@@ -778,6 +780,7 @@ const GestureView = (props: GestureViewProps) => {
               backgroundColor: CONTAINER_BACKGROUND_COLOR,
             }}
             theme={errorTheme}
+            errorText={errorText}
           />
         )}
       </TouchableOpacity>

@@ -29,6 +29,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#414141'
   },
   player: {
     width: '100%',
@@ -38,12 +39,12 @@ const styles = StyleSheet.create({
   topBar: {
     width: '100%',
     height: 50,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#212121',
   },
   bottomBar: {
     width: '100%',
     height: 50,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#212121',
   },
   buttonContainer: {
     padding: 10,

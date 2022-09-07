@@ -1,9 +1,6 @@
-import { Button, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import React from 'react';
-import NexenPlayer, {
-  LayoutMode,
-  NexenPlayerRef,
-} from 'expo-nexen-player';
+import NexenPlayer, { LayoutMode, NexenPlayerRef } from 'expo-nexen-player';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -11,13 +8,15 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { data } from './data';
+import Button from './Button';
 
 type Props = {};
 
 const Player = (props: Props) => {
   const [mode, setMode] = React.useState<LayoutMode>('basic');
   const [paused, setPaused] = React.useState(true);
-  const [fullScreen, setFullScreen] = React.useState<boolean>(false);
+  const [isFullScreen, setIsFullScreen] = React.useState<boolean>(false);
+  const [playlist, setPlaylist] = React.useState(false);
 
   const playerRef = React.useRef<NexenPlayerRef>(null);
 
@@ -39,13 +38,14 @@ const Player = (props: Props) => {
     }
     setPaused((prevState) => !prevState);
   };
-  const onPresentFullScreen = () => {
-    setFullScreen(true);
-    // ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-  };
-  const onDismissFullScreen = () => {
-    setFullScreen(false);
-    // ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+  const onFullScreenModeUpdate = async (fullScreen: boolean) => {
+    console.log(`Player: onFullScreenModeUpdate:${fullScreen}`)
+    if (fullScreen) {
+      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+    } else {
+      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    }
+    setIsFullScreen(fullScreen);
   };
 
   const onBackPressed = () => {};
@@ -60,81 +60,95 @@ const Player = (props: Props) => {
 
   const onChangeIndexPress = () => {
     playerRef.current?.setActiveIndex(9);
-  }
+  };
   const onReloadPress = () => {
     playerRef.current?.reload();
-  }
+  };
+
+  const onPlaylistSet = () => {
+    if (playlist) {
+      playerRef.current?.setPlaylist([]);
+    } else {
+      playerRef.current?.setPlaylist(data, 4);
+    }
+    setPlaylist((prevState) => !prevState);
+  };
 
   React.useEffect(() => {
-    playerRef.current?.setPlaylist(data, 4);
+    // playerRef.current?.setPlaylist(data, 4);
     // playerRef.current?.setActiveIndex(4);
   }, []);
 
   const edge = useSafeAreaInsets();
   console.log(`PlayerEdgeInsets: ${JSON.stringify(edge)}`);
 
-  const viewStyle: StyleProp<ViewStyle> = fullScreen
-      ? {
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          top: 0,
-          left: 0,
-          zIndex: 9999,
-        }
-      : { position: 'relative' };
+  const viewStyle: StyleProp<ViewStyle> = isFullScreen
+    ? {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+      }
+    : { position: 'relative' };
 
   return (
     <>
-    <StatusBar style={fullScreen ? 'light' : 'dark'}  hidden={fullScreen}/>
-    <View style={[styles.container, viewStyle]}>
-      <NexenPlayer
-        ref={playerRef}
-        style={styles.player}
-        source={require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4')}
-        // source={{
-        //   uri: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4',
-        // }}
-        // poster={
-        //   'https://www.carage.net/media/halfhd/carage_fahrzeuge_square_8.jpg'
-        // }
-        // posterStyle={'cover'}
-        title={'Ryu\'s Hurricane Kick and Hadoken'}
-        layoutMode={mode}
-        // controlHideMode={'auto'}
-        // disableStop={true}
-        // disableSubtitle={true}
-        insets={edge}
-        theme={
-          {
-            // colors: {
-            //   primaryIconColor: fullScreen ? 'white' : 'blue',
-            // },
-            // fonts: {
-            //   primaryFont: 'Montserrat-Medium',
-            //   secondaryFont: 'Montserrat-Regular',
-            // }
+      <StatusBar style={'light'} hidden={isFullScreen} />
+      <View style={[styles.container, viewStyle]}>
+        <NexenPlayer
+          ref={playerRef}
+          style={styles.player}
+          source={require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4')}
+          // source={{
+          //   uri: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4',
+          // }}
+          // poster={
+          //   'https://www.carage.net/media/halfhd/carage_fahrzeuge_square_8.jpg'
+          // }
+          // posterStyle={'cover'}
+          title={"Ryu's Hurricane Kick and Hadoken"}
+          layoutMode={mode}
+          // controlHideMode={'auto'}
+          // disableStop={true}
+          // disableSubtitle={true}
+          insets={edge}
+          theme={
+            {
+              // colors: {
+              //   primaryIconColor: fullScreen ? 'white' : 'blue',
+              // },
+              // fonts: {
+              //   primaryFont: 'Montserrat-Medium',
+              //   secondaryFont: 'Montserrat-Regular',
+              // }
+            }
           }
-        }
-        // pause={paused}
-        onPlay={onPlay}
-        onPaused={onPaused}
-        onBackPressed={onBackPressed}
-        onPresentFullScreen={onPresentFullScreen}
-        onDismissFullScreen={onDismissFullScreen}
-      />
-      
-      <View style={styles.buttonContainer}>
-        <Button onPress={onPress} title={`Change Mode: ${mode}`} />
-        <View style={{ marginTop: 8 }} />
-        <Button onPress={onPausePress} title={paused ? 'Play' : 'Pause'} />
-        <View style={{ marginTop: 8 }} />
-        <Button onPress={onChangeIndexPress} title={'Change Index to 9'} />
-        <View style={{ marginTop: 8 }} />
-        <Button onPress={onReloadPress} title={'Reload'} />
+          // pause={paused}
+          onPlay={onPlay}
+          onPause={onPaused}
+          onBackPressed={onBackPressed}
+          onFullScreenModeUpdate={onFullScreenModeUpdate}
+        />
+
+        <View style={styles.buttonContainer}>
+          <Button onPress={onPress} title={`Change Mode: ${mode}`} />
+          <View style={{ marginTop: 8 }} />
+          <Button onPress={onPausePress} title={paused ? 'Play' : 'Pause'} />
+          {/* <View style={{ marginTop: 8 }} />
+        <Button onPress={onChangeIndexPress} title={'Change Index to 9'} /> */}
+          <View style={{ marginTop: 8 }} />
+          <Button onPress={onReloadPress} title={'Reload'} />
+          <View style={{ marginTop: 8 }} />
+          <Button
+            onPress={onPlaylistSet}
+            title={playlist ? 'Clear Playlist' : 'Set Playlist'}
+          />
+          {/* <View style={{ marginTop: 8 }} />
+        <Button onPress={onPlaylistSetEmpty} title={'Set Empty Playlist'} /> */}
+        </View>
       </View>
-      
-    </View>
     </>
   );
 };
@@ -147,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // paddingVertical: 100,
     // justifyContent: 'center',
-    backgroundColor: '#bdd',
+    // backgroundColor: '#bdd',
   },
   player: {
     width: '100%',
@@ -155,8 +169,8 @@ const styles = StyleSheet.create({
     // marginVertical: 5,
   },
   buttonContainer: {
-    padding: 10,
-    // backgroundColor: 'pink',
+    width: 240,
+    paddingVertical: 10,
     zIndex: 1,
   },
 });

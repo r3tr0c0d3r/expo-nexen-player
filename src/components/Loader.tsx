@@ -9,8 +9,8 @@ export interface LoaderTheme extends TipViewTheme {
 }
 
 type LoaderProps = {
-  loadingIcon?: JSX.Element;
-  loadingText?: string;
+  loaderIcon?: JSX.Element;
+  loaderText?: string;
   theme?: LoaderTheme;
   style?: StyleProp<ViewStyle>;
 };
@@ -41,8 +41,8 @@ const Loader = (props: LoaderProps) => {
   return (
     <ModalView style={style}>
       <Animated.View style={{transform: [{rotate: spinAnim}]}}>
-        {props.loadingIcon ? (
-          props.loadingIcon
+        {props.loaderIcon ? (
+          props.loaderIcon
         ) : (
           <IconLoader size={theme?.iconSize} color={theme?.iconColor} />
         )}
@@ -50,7 +50,7 @@ const Loader = (props: LoaderProps) => {
 
       <View>
         <Text style={[styles.text, {color: theme?.textColor, fontSize: theme?.textSize}]}>
-          {props.loadingText ? props.loadingText : 'Loading...'}
+          {props.loaderText}
         </Text>
       </View>
     </ModalView>

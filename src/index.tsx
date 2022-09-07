@@ -1,4 +1,4 @@
 import NexenPlayer from './components/NexenPlayer';
-import { LayoutMode, EdgeInsets, NexenPlayerRef }  from './components/NexenPlayer';
+import { ControlHideMode, LayoutMode, EdgeInsets, PlaybackSpeed, PlaylistItem, NexenPlayerRef }  from './components/NexenPlayer';
 export default NexenPlayer;
-export { LayoutMode, EdgeInsets, NexenPlayerRef }
+export { ControlHideMode, LayoutMode, EdgeInsets, PlaybackSpeed, PlaylistItem, NexenPlayerRef }

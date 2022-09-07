@@ -48,7 +48,7 @@ const VolumeTagView = (props: VolumeTagViewProps) => {
     onVolumePress,
   } = props;
 
-  const [volume, setVolume] = React.useState(playerVolume);
+  const [volume, setVolume] = React.useState(0);
   const SEEK_WIDTH = 100;
 
   const seekBarTheme = React.useMemo((): SeekBarTheme => {
@@ -104,6 +104,10 @@ const VolumeTagView = (props: VolumeTagViewProps) => {
   const onToggleVolume = () => {
     onVolumePress?.();
   };
+
+  React.useEffect(() => {
+    setVolume(playerVolume);
+  }, [playerVolume])
 
   return (
     <View style={[styles.container, style, containerStyle]}>

@@ -24,7 +24,7 @@ const ErrorView = (props: ErrorViewProps) => {
     <ModalView style={[style]}>
       <IconXCircle size={theme?.iconSize} color={theme?.iconColor} />
       <Text style={[styles.text, errorTextStyle]}>
-        {errorText || 'Error...!'}
+        {errorText}
       </Text>
     </ModalView>
   );
