@@ -11,7 +11,7 @@ import {
   IconAspectRatio,
   IconChevronLeft,
   IconMoreHorizontal,
-} from '../../assets/icons';
+} from '../assets/icons';
 import IconButton from './IconButton';
 import GradientView from './GradientView';
 import type { NexenTheme } from '../utils/Theme';
@@ -114,6 +114,9 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
         borderColor:
           nexenTheme?.tagView?.borderColor ||
           getAlphaColor(nexenTheme?.colors?.accentColor!, 0.7),
+        backgroundColor: 
+          nexenTheme?.tagView?.backgroundColor ||
+          getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.0),
       };
     }, [nexenTheme, fullScreen]);
 

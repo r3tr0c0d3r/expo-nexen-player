@@ -13,7 +13,7 @@ import {
 import GradientView from './GradientView';
 import { NexenTheme } from '../utils/Theme';
 import { EdgeInsets, PlaylistItem } from './NexenPlayer';
-import { IconPlayCircle } from '../../assets/icons';
+import { IconPlayCircle } from '../assets/icons';
 import ModalView from './ModalView';
 import { withAnimation } from '../hoc/withAnimation';
 

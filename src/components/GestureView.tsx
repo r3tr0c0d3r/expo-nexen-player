@@ -18,7 +18,7 @@ import {
   IconRewind,
   IconSun,
   IconVolume2,
-} from './../../assets/icons';
+} from '../assets/icons';
 import SeekBarTipView, {
   SeekBarTipViewRef,
   SeekBarTipViewTheme,

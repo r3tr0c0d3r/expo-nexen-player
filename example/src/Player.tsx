@@ -128,7 +128,7 @@ const Player = (props: Props) => {
           // pause={paused}
           onPlay={onPlay}
           onPause={onPaused}
-          onBackPressed={onBackPressed}
+          onBackPress={onBackPressed}
           onFullScreenModeUpdate={onFullScreenModeUpdate}
         />
 

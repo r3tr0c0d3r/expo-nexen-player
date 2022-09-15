@@ -1,6 +1,6 @@
 import React, {useImperativeHandle} from 'react';
 import {ColorValue, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {IconInfo} from './../../assets/icons';
+import {IconInfo} from '../assets/icons';
 import ModalView from './ModalView';
 
 export interface TipViewTheme {

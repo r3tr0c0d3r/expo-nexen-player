@@ -33,10 +33,10 @@ export const DefaultColorsTheme: ColorTheme = {
     secondaryColor: '#fafafa',
     accentColor: '#fa5005',
     primaryTextColor: '#fafafa',
-    secondaryTextColor: '#e6e6e6',
+    secondaryTextColor: '#f2f2f2',
     primaryIconColor: '#fafafa',
-    secondaryIconColor: '#e6e6e6',
-    rippleIconColor: '#e6e6e6',
+    secondaryIconColor: '#f2f2f2',
+    rippleIconColor: '#f2f2f2',
 }
 
 export type FontTheme = {
@@ -180,6 +180,7 @@ export type TagViewTheme = {
     textSize?: number;
     textLineHeight?: number;
     iconSize?: number;
+    backgroundColor?: ColorValue;
     iconColor?: ColorValue;
     textColor?: ColorValue;
     borderColor?: ColorValue;

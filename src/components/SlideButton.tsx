@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { IconLock } from './../../assets/icons';
+import { IconLock } from '../assets/icons';
 import { boundPosition } from '../utils/MathUtil';
 import type { LockButtonTheme } from '../utils/Theme';
 

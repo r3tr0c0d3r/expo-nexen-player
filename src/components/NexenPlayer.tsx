@@ -20,7 +20,7 @@ import {
   IconRepeat,
   IconUnlock,
   IconZap,
-} from '../../assets/icons';
+} from '../assets/icons';
 import {
   getAspectRatioTipText,
   getKeyByValue,
@@ -130,7 +130,7 @@ type NexenPlayerProps = {
   style?: StyleProp<ViewStyle>;
   theme?: NexenTheme;
   insets?: EdgeInsets;
-  onBackPressed?: () => void;
+  onBackPress?: () => void;
   onFullScreenModeUpdate?: (fullScreen: boolean) => void;
   onPlay?: () => void;
   onPause?: () => void;
@@ -154,6 +154,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       poster,
       posterStyle,
       doubleTapTime,
+      controlTimeout: controlTimeoutDelay,
       controlHideMode,
       layoutMode,
       title,
@@ -161,7 +162,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       errorText,
       style,
       insets,
-      controlTimeout: controlTimeoutDelay,
+      theme,
       disableOnScreenPlayButton,
       disableBack,
       disableResizeMode,
@@ -171,7 +172,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       disableStop,
       disableFullscreen,
       disablePlaylist,
-      onBackPressed,
+      onBackPress,
       onFullScreenModeUpdate,
       onPlay,
       onPause,
@@ -186,7 +187,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       onPlaylistItemSelect,
       onScreenLockUpdate,
       onReload,
-      theme,
+      
     } = props;
     // console.log(`NexenPlayer: called`);
     const [dimension, setDimension] = React.useState({ width: 0, height: 0 });
@@ -258,10 +259,10 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
         handleStopPlayback();
       },
       skipNext: () => {
-        onVideoSkipNext();
+        _onVideoSkipNext();
       },
       skipBack: () => {
-        onVideoSkipBack();
+        _onVideoSkipBack();
       },
       reload: () => {
         handleReloadVideo();
@@ -292,7 +293,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
         onBrightnessUpdate?.(brightness);
       },
       setPlaybackSpeed: (speed: PlaybackSpeed) => {
-        onSpeedChange(speed);
+        _onSpeedUpdate(speed);
       },
       setPlaylist: (list?: PlaylistItem[], index: number = 0) => {
         videoRef.current?.unloadAsync().then(() => {
@@ -335,7 +336,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
         setFullScreen(fullScreen);
         onFullScreenModeUpdate?.(fullScreen);
       },
-    }), [paused]);
+    }));
 
     const nexenTheme = React.useMemo((): NexenTheme => {
       return {
@@ -456,7 +457,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       };
     }, [nexenTheme]);
 
-    const onLayoutChange = async (e: LayoutChangeEvent) => {
+    const _onLayoutChange = async (e: LayoutChangeEvent) => {
       const { width, height } = e.nativeEvent.layout;
       const { width: w, height: h } = dimension;
       if (w !== width || h !== height) {
@@ -465,7 +466,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       }
     };
 
-    const onTapDetected = React.useCallback(
+    const _onTapDetected = React.useCallback(
       async (event: TapEventType, value?: number) => {
         switch (event) {
           case TapEventType.SINGLE_TAP:
@@ -518,7 +519,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       ]
     );
 
-    const onGestureMove = React.useCallback(
+    const _onGestureMove = React.useCallback(
       (event: GestureEventType, value: number) => {
         switch (event) {
           case GestureEventType.VOLUME:
@@ -550,7 +551,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onGestureEnd = React.useCallback(
+    const _onGestureEnd = React.useCallback(
       async (event: GestureEventType, value: number) => {
         switch (event) {
           case GestureEventType.TRACK:
@@ -799,7 +800,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     React.useEffect(() => {
       const backHandler = BackHandler.addEventListener(
         'hardwareBackPress',
-        onBackPress
+        _onBackPress
       );
       return () => {
         if (backHandler) {
@@ -811,17 +812,17 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       };
     }, []);
 
-    const onBackPress = React.useCallback(() => {
-      if (fullScreen) {
+    const _onBackPress = React.useCallback(() => {
+      if (isFullscreen.current) {
         setFullScreen(false);
         onFullScreenModeUpdate?.(false);
       } else {
-        onBackPressed?.();
+        onBackPress?.();
       }
       return true;
-    }, [fullScreen]);
+    }, []);
 
-    const onAspectRatioPress = React.useCallback(() => {
+    const _onAspectRatioPress = React.useCallback(() => {
       if (resizeModeIndex < RESIZE_MODE_VALUES.length - 1) {
         setResizeModeIndex((prevState) => prevState + 1);
       } else {
@@ -829,13 +830,13 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       }
     }, [resizeModeIndex]);
 
-    const onMorePress = React.useCallback(() => {
+    const _onMorePress = React.useCallback(() => {
       showMoreOptions();
       hideMainControl();
       gestureEnabled.current = false;
     }, []);
 
-    const onMoreItemPress = React.useCallback(
+    const _onMoreItemPress = React.useCallback(
       (item: MoreItem) => {
         switch (item.id) {
           case 'lock':
@@ -869,7 +870,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       [loop, paused, videoList]
     );
 
-    const onSpeedChange = React.useCallback((value: string) => {
+    const _onSpeedUpdate = React.useCallback((value: string) => {
       // const newSpeed = typeof value == 'string' ? Number(value) : value;
       const newSpeed = Number(value);
       tipViewRef.current?.updateState({
@@ -912,14 +913,14 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     /* FooterControl Callback */
-    const onPlayButtonPress = () => {
+    const _onPlayButtonPress = () => {
       console.log(`onPlayButtonPress`);
       // playerRef.current?.play();
       setPaused(false);
       onPlay?.();
     };
 
-    const onStopPress = () => {
+    const _onStopPress = () => {
       console.log(`onStopPress`);
       // isStopped.current = false;
       handleStopPlayback();
@@ -984,7 +985,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       onScreenLockUpdate?.(true);
     };
 
-    const onRewind = () => {
+    const _onRewind = () => {
       const time = trackInfo.trackTime - FORWARD_OR_REWIND_DURATION;
       videoRef.current?.setStatusAsync({ positionMillis: time * 1000 });
       setTrackInfo((prevState) => {
@@ -995,7 +996,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       });
     };
 
-    const onFastForward = () => {
+    const _onFastForward = () => {
       const time = trackInfo.trackTime + FORWARD_OR_REWIND_DURATION;
       videoRef.current?.setStatusAsync({ positionMillis: time * 1000 });
       setTrackInfo((prevState) => {
@@ -1006,7 +1007,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       });
     };
 
-    const onVideoSkipNext = () => {
+    const _onVideoSkipNext = () => {
       if (videoList) {
         if (videoIndex! < videoList.length - 1) {
           videoRef.current?.unloadAsync().then(() => {
@@ -1027,7 +1028,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       }
     };
 
-    const onVideoSkipBack = () => {
+    const _onVideoSkipBack = () => {
       if (videoList) {
         if (videoIndex > 0) {
           videoRef.current?.unloadAsync().then(() => {
@@ -1047,14 +1048,14 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
         }
       }
     };
-    const onVideoListPress = () => {
+    const _onVideoListPress = () => {
       hideMainControl();
       // showVideoListControl();
       playlistControlRef.current?.show();
       gestureEnabled.current = false;
     };
 
-    const onPlaylistItemPress = (index: number) => {
+    const _onPlaylistItemPress = (index: number) => {
       if (videoIndex !== index) {
         videoRef.current?.unloadAsync().then(() => {
           setTrackInfo({
@@ -1062,8 +1063,8 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
             totalTrackTime: 0,
             cachedTrackTime: 0,
           });
-          setPaused(false);
-          onPlay?.();
+          // setPaused(false);
+          // onPlay?.();
           videoRef.current
             ?.loadAsync({ uri: videoList![index].source })
             .then(() => {
@@ -1074,7 +1075,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       }
     };
 
-    const onTogglePlayPause = () => {
+    const _onTogglePlayPause = () => {
       if (paused) {
         onPlay?.();
       } else {
@@ -1083,25 +1084,12 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       setPaused((prevState) => !prevState);
     };
 
-    const onToggleFullScreen = () => {
-      // if (fullScreen) {
-      //   onDismissFullScreen?.();
-      // } else {
-      //   onFullScreenModeUpdate?.();
-      // }
+    const _onToggleFullScreen = () => {
       onFullScreenModeUpdate?.(!fullScreen);
       setFullScreen((prevState) => !prevState);
     };
 
-    const onToggleVolume = () => {
-      // tipViewRef.current?.updateState({
-      //   showTip: true,
-      //   tipText: !muted ? 'Sound Off' : 'Sound On',
-      //   autoHide: true,
-      // });
-      // isVolumeSeekable.current = !(!muted);
-      // onMuteUpdate?.(!muted);
-      // setMuted((prevState) => !prevState);
+    const _onToggleVolume = () => {
       handleMuteVideo(!muted);
     };
 
@@ -1117,17 +1105,17 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     };
 
     /* Slide Button Callback */
-    const onSlideStart = React.useCallback(() => {
+    const _onSlideStart = React.useCallback(() => {
       isSliding.current = true;
     }, []);
 
-    const onSlideEnd = React.useCallback(() => {
+    const _onSlideEnd = React.useCallback(() => {
       isSliding.current = false;
     }, []);
 
-    const onReachedToStart = React.useCallback(() => {}, []);
+    const _onReachedToStart = React.useCallback(() => {}, []);
 
-    const onReachedToEnd = React.useCallback(() => {
+    const _onReachedToEnd = React.useCallback(() => {
       setLocked(false);
       isSeekable.current = true;
       gestureEnabled.current = true;
@@ -1144,7 +1132,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     }, []);
 
     /* SeekBar Callback */
-    const onSeekStart = React.useCallback(
+    const _onSeekStart = React.useCallback(
       (value: number, totalValue: number) => {
         isSeeking.current = true;
         tipViewRef.current?.updateState({
@@ -1156,7 +1144,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onSeekUpdate = React.useCallback(
+    const _onSeekUpdate = React.useCallback(
       (value: number, totalValue: number) => {
         if (isSeeking.current) {
           tipViewRef.current?.updateState({
@@ -1167,7 +1155,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onSeekEnd = React.useCallback((value: number) => {
+    const _onSeekEnd = React.useCallback((value: number) => {
       isSeeking.current = false;
       videoRef.current?.setStatusAsync({ positionMillis: value * 1000 });
       setTrackInfo((prevState) => {
@@ -1178,7 +1166,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     }, []);
 
     /* Volume SeekBar Callback */
-    const onVolumeSeekStart = React.useCallback(
+    const _onVolumeSeekStart = React.useCallback(
       async (value: number, totalValue: number) => {
         tipViewRef.current?.updateState({
           showTip: true,
@@ -1191,7 +1179,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onVolumeSeekUpdate = React.useCallback(
+    const _onVolumeSeekUpdate = React.useCallback(
       async (value: number, totalValue: number) => {
         tipViewRef.current?.updateState({
           showTip: true,
@@ -1204,7 +1192,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onVolumeSeekEnd = React.useCallback(async (value: number) => {
+    const _onVolumeSeekEnd = React.useCallback(async (value: number) => {
       setVolume(value);
       tipViewRef.current?.updateState({ showTip: false, autoHide: true });
       onVolumeUpdate?.(value);
@@ -1212,11 +1200,11 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
 
     /* VLCPlayer Callback */
 
-    const onLoadStart = React.useCallback(() => {
+    const _onLoadStart = React.useCallback(() => {
       setLoading(true);
     }, []);
 
-    const onLoad = React.useCallback((status: AVPlaybackStatus) => {
+    const _onLoad = React.useCallback((status: AVPlaybackStatus) => {
       console.log(`onLoad!!: ${JSON.stringify(status)}`);
       setLoading(false);
       setError(!status.isLoaded);
@@ -1234,7 +1222,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       isStopped.current = false;
     }, []);
 
-    const onPlaybackStatusUpdate = React.useCallback(
+    const _onPlaybackStatusUpdate = React.useCallback(
       (status: AVPlaybackStatus) => {
         // console.log(`onPlaybackStatusUpdate!!: ${JSON.stringify(status)}`);
         if (status.isLoaded) {
@@ -1249,7 +1237,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           if (!status.isLooping && status.didJustFinish) {
             if (videoList) {
               if (videoIndex! < videoList.length - 1) {
-                onVideoSkipNext();
+                _onVideoSkipNext();
               } else {
                 handleStopPlayback();
               }
@@ -1262,21 +1250,21 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
       []
     );
 
-    const onReadyForDisplay = React.useCallback(
+    const _onReadyForDisplay = React.useCallback(
       (event: VideoReadyForDisplayEvent) => {
         // console.log(`onReadyForDisplay!!: ${JSON.stringify(event)}`);
       },
       []
     );
 
-    const onFullscreenUpdate = React.useCallback(
+    const _onFullscreenUpdate = React.useCallback(
       (event: VideoFullscreenUpdateEvent) => {
         // console.log(`onPlaybackRateChange!!: ${JSON.stringify(event)}`);
       },
       []
     );
 
-    const onError = React.useCallback((error: string) => {
+    const _onError = React.useCallback((error: string) => {
       console.log(`onError: ${JSON.stringify(error)}`);
       setError(true);
     }, []);
@@ -1295,7 +1283,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
     return (
       <View
         style={[styles.playerContainer, style, playerStyle]}
-        onLayout={onLayoutChange}
+        onLayout={_onLayoutChange}
       >
         <Video
           ref={videoRef}
@@ -1320,12 +1308,12 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           rate={speed}
           resizeMode={getKeyByValue(RESIZE_MODE_VALUES[resizeModeIndex]!)}
           progressUpdateIntervalMillis={500}
-          onLoadStart={onLoadStart}
-          onLoad={onLoad}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-          onError={onError}
-          onReadyForDisplay={onReadyForDisplay}
-          onFullscreenUpdate={onFullscreenUpdate}
+          onLoadStart={_onLoadStart}
+          onLoad={_onLoad}
+          onPlaybackStatusUpdate={_onPlaybackStatusUpdate}
+          onError={_onError}
+          onReadyForDisplay={_onReadyForDisplay}
+          onFullscreenUpdate={_onFullscreenUpdate}
         />
 
         <GestureView
@@ -1345,9 +1333,9 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
           brightness={brightness}
           nexenTheme={nexenTheme}
           doubleTapTime={doubleTapTime}
-          onTapDetected={onTapDetected}
-          onGestureMove={onGestureMove}
-          onGestureEnd={onGestureEnd}
+          onTapDetected={_onTapDetected}
+          onGestureMove={_onGestureMove}
+          onGestureEnd={_onGestureEnd}
         />
 
         <>
@@ -1370,9 +1358,9 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               disableBack={disableBack}
               disableRatio={disableResizeMode}
               disableMore={disableMore}
-              onBackPress={onBackPress}
-              onAspectRatioPress={onAspectRatioPress}
-              onMorePress={onMorePress}
+              onBackPress={_onBackPress}
+              onAspectRatioPress={_onAspectRatioPress}
+              onMorePress={_onMorePress}
             />
           )}
 
@@ -1400,25 +1388,25 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               disableStop={disableStop}
               disableFullscreen={disableFullscreen}
               disableRatio={disableResizeMode}
-              onStopPress={onStopPress}
-              onPlayPress={onTogglePlayPause}
-              onFullScreenPress={onToggleFullScreen}
-              onVolumePress={onToggleVolume}
-              onAspectRatioPress={onAspectRatioPress}
-              onRewind={onRewind}
-              onFastForward={onFastForward}
-              onSkipNext={onVideoSkipNext}
-              onSkipBack={onVideoSkipBack}
-              onSeekStart={onSeekStart}
-              onSeekUpdate={onSeekUpdate}
-              onSeekEnd={onSeekEnd}
-              onVolumeSeekStart={onVolumeSeekStart}
-              onVolumeSeekUpdate={onVolumeSeekUpdate}
-              onVolumeSeekEnd={onVolumeSeekEnd}
-              onSlideStart={onSlideStart}
-              onSlideEnd={onSlideEnd}
-              onReachedToStart={onReachedToStart}
-              onReachedToEnd={onReachedToEnd}
+              onStopPress={_onStopPress}
+              onPlayPress={_onTogglePlayPause}
+              onFullScreenPress={_onToggleFullScreen}
+              onVolumePress={_onToggleVolume}
+              onAspectRatioPress={_onAspectRatioPress}
+              onRewind={_onRewind}
+              onFastForward={_onFastForward}
+              onSkipNext={_onVideoSkipNext}
+              onSkipBack={_onVideoSkipBack}
+              onSeekStart={_onSeekStart}
+              onSeekUpdate={_onSeekUpdate}
+              onSeekEnd={_onSeekEnd}
+              onVolumeSeekStart={_onVolumeSeekStart}
+              onVolumeSeekUpdate={_onVolumeSeekUpdate}
+              onVolumeSeekEnd={_onVolumeSeekEnd}
+              onSlideStart={_onSlideStart}
+              onSlideEnd={_onSlideEnd}
+              onReachedToStart={_onReachedToStart}
+              onReachedToEnd={_onReachedToEnd}
             />
           )}
           {/* bottom line bar */}
@@ -1449,7 +1437,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               disablePlaylist={disablePlaylist}
               insets={insets}
               nexenTheme={nexenTheme}
-              onItemPress={onMoreItemPress}
+              onItemPress={_onMoreItemPress}
             />
           )}
 
@@ -1468,7 +1456,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               insets={insets}
               currentSpeed={speed}
               nexenTheme={nexenTheme}
-              onSpeedChange={onSpeedChange}
+              onSpeedChange={_onSpeedUpdate}
             />
           )}
 
@@ -1488,7 +1476,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
               fullScreen={fullScreen}
               nexenTheme={nexenTheme}
               insets={insets}
-              onPlaylistItemPress={onPlaylistItemPress}
+              onPlaylistItemPress={_onPlaylistItemPress}
             />
           )}
 
@@ -1503,7 +1491,7 @@ const NexenPlayer = React.forwardRef<NexenPlayerRef, NexenPlayerProps>(
             !disableOnScreenPlayButton && (
               <PlayButton
                 dimension={dimension}
-                onPlayPress={onPlayButtonPress}
+                onPlayPress={_onPlayButtonPress}
               />
             )}
 

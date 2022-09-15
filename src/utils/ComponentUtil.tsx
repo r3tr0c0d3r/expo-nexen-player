@@ -8,7 +8,7 @@ import {
     IconVolume1,
     IconVolume2,
     IconVolume3,
-  } from './../../assets/icons';
+  } from '../assets/icons';
 
 export const getVolumeIcon = (
     volume: number,

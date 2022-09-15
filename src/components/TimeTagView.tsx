@@ -19,6 +19,7 @@ const TimeTagView = (props: TimeTagViewProps) => {
     borderRadius: theme?.cornerRadius,
     borderWidth: theme?.borderWidth,
     borderColor: theme?.borderColor,
+    backgroundColor: theme?.backgroundColor,
   };
   const timeTextStyle = {
     fontSize: theme?.textSize,

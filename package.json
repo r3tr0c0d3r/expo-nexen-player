@@ -1,6 +1,6 @@
 {
   "name": "expo-nexen-player",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A next generation video player for expo project",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -47,7 +47,8 @@
   },
   "homepage": "https://github.com/r3tr0c0d3r/expo-nexen-player#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "zzz": "https://registry.npmjs.org/",
+    "registry": "http://localhost:4873/"
   },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.7",
@@ -115,6 +116,7 @@
   },
   "eslintConfig": {
     "root": true,
+    "parser": "@babel/eslint-parser",
     "extends": [
       "@react-native-community",
       "prettier"

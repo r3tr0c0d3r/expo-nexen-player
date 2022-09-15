@@ -19,7 +19,7 @@ import {
   IconPlayCircle,
   IconPauseCircle,
   IconAspectRatio,
-} from '../../assets/icons';
+} from '../assets/icons';
 import IconButton from './IconButton';
 import { formatTime } from '../utils/StringUtil';
 import SeekBar, { SeekBarTheme } from './SeekBar';
@@ -247,6 +247,9 @@ const FooterControl = React.forwardRef<FooterControlRef, FooterControlProps>(
         borderColor:
           nexenTheme?.tagView?.borderColor ||
           getAlphaColor(nexenTheme?.colors?.secondaryColor!, 0.3),
+        backgroundColor: 
+          nexenTheme?.tagView?.backgroundColor ||
+          getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.0),
       };
     }, [nexenTheme, fullScreen]);
 

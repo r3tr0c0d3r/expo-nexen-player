@@ -6,7 +6,7 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import { IconPlayCircle } from './../../assets/icons';
+import { IconPlayCircle } from '../assets/icons';
 import { Dimension } from './NexenPlayer';
 
 type PlayButtonProps = {

@@ -17,7 +17,7 @@ import {
   IconRepeat,
   IconUnlock,
   IconZap,
-} from './../../assets/icons';
+} from '../assets/icons';
 import GradientView from './GradientView';
 import { EdgeInsets } from './NexenPlayer';
 import { withAnimation } from '../hoc/withAnimation';

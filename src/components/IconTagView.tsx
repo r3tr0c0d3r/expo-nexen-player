@@ -7,7 +7,7 @@ import {
   IconSun1,
   IconVolume,
   IconZap,
-} from '../../assets/icons';
+} from '../assets/icons';
 
 export interface IconTagViewTheme extends TagViewTheme {
 
@@ -58,6 +58,7 @@ const IconTagView = React.forwardRef<IconTagViewRef, IconTagViewProps>(
       borderRadius: theme?.cornerRadius,
       borderWidth: theme?.borderWidth,
       borderColor: theme?.borderColor,
+      backgroundColor: theme?.backgroundColor,
     };
 
     return (

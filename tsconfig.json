@@ -9,6 +9,7 @@
     "esModuleInterop": true,
     // "importsNotUsedAsValues": "error",
     "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "jsx": "react",
     "lib": ["esnext"],
     "module": "esnext",

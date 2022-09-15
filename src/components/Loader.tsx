@@ -1,6 +1,6 @@
 import React from 'react';
 import {Animated, Easing, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {IconLoader} from './../../assets/icons';
+import {IconLoader} from '../assets/icons';
 import ModalView from './ModalView';
 import type { TipViewTheme } from './TipView';
 

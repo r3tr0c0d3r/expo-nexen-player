@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { IconXCircle } from './../../assets/icons';
+import { IconXCircle } from '../assets/icons';
 import ModalView from './ModalView';
 import type { TipViewTheme } from './TipView';
 

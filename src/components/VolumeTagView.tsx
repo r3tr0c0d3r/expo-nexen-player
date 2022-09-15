@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import SeekBar, { SeekBarTheme } from './SeekBar';
 import IconButton from './IconButton';
 import { getVolumeIcon } from '../utils/ComponentUtil';
-import { IconVolume } from '../../assets/icons';
+import { IconVolume } from '../assets/icons';
 import type { MiniSeekBarTheme, TagViewTheme } from '../utils/Theme';
 
 export interface VolumeTagViewTheme extends TagViewTheme, MiniSeekBarTheme {
