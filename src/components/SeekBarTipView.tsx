@@ -40,9 +40,9 @@ type SeekBarTipViewState = {
 const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>((props, ref) => {
   // console.log(`SeekBarTipView: renders`)
   const {dimension, barHeight, heightPercentage, icon, parentStyle, style, theme} = props;
-  React.useEffect(() => {
-    console.log(`SeekBarTipView theme:: ${JSON.stringify(theme)}`);
-  }, [])
+  // React.useEffect(() => {
+  //   console.log(`SeekBarTipView theme:: ${JSON.stringify(theme)}`);
+  // }, [])
 
   const [state, setState] = React.useState<SeekBarTipViewState>({
     showTip: false,

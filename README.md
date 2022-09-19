@@ -50,30 +50,37 @@ const onPausePress = () => {
 // ...
 ```
 
-
-
-
-  style?: StyleProp<ViewStyle>;
-  theme?: NexenTheme;
-  insets?: EdgeInsets;
-
 ## Component props
 
 | prop                      | type     | default      | description                                 |
 | ------------------------- | -------- | ------------ | --------------------------------------------|
-| source                    | object   | {}           | media source.       |
+| playerSource              | NexenPlayer [PlayerSource](#PlayerSource) object   | {}           | media source.           |
+| playerConfig              | NexenPlayer [PlayerConfig](#PlayerConfig) object   | ''           | vidoe player config.       |
+| optimizationConfig        | NexenPlayer [OptimizationConfig](#OptimizationConfig) object   | {}           | only for FlatList Optimization.      |
+| insets                    | object   | {}           | edge insets for video controls. you can set insets from `react-native-safe-area-context`.|
+| style                     | object   | {}           | style for video player.    |
+| theme                     | object   | {}           | set theme for video player.    |
+
+
+### PlayerSource
+
+| prop                      | type     | default      | description                                 |
+| ------------------------- | -------- | ------------ | --------------------------------------------|
+| source                    | AVPlaybackSource object from expo-av  | {}           | media source.       |
+| title                     | string   | ''           | video title.       |
 | poster                    | string   | ''           | poster url.       |
-| posterStyle               | object   | {}           | poster style.      |
-| title                     | string   | ''           | text for video title.    |
-| loadingText               | string   | 'Loading...' | text for loader.  |
+| playlist                  | {items: PlaylistItem[]; currentIndex?: number;}   | {}           | poster style.      |
+
+### PlayerConfig
+
+| prop                      | type     | default      | description                                 |
+| ------------------------- | -------- | ------------ | --------------------------------------------|
+| loaderText               | string   | 'Loading...' | text for loader.  |
 | errorText                 | string   | 'Error...!'  | text for error message.            |
 | doubleTapTime             | number   | 300ms        | duration of double tap. |
 | controlTimeout            | number   | 500ms        | main control will hide after this amount of time when `controlHideMode` set to 'auto'. |
 | controlHideMode           | string   | 'touch'      | hide options for main control - 'touch' or 'auto'. |
 | layoutMode                | stirng   | 'basic'      | options for main control layout - 'basic', 'intermediate' or 'advanced'.        |
-| insets                    | object   | {}           | edge insets for video controls. you can set insets from `react-native-safe-area-context`.|
-| style                     | object   | {}           | style for video player.    |
-| theme                     | object   | {}           | set theme for video player.    |
 | disableOnScreenPlayButton | boolean  | false        | a large play button that appears on screen when video is paused. |
 | disableBack               | boolean  | false        | hide back button. |
 | disableResizeMode         | boolean  | false        | hide aspect ration button. |
@@ -81,8 +88,18 @@ const onPausePress = () => {
 | disableMore               | boolean  | false        | hide more button. |
 | disableSkip               | boolean  | false        | hide skip buttons. |
 | disableStop               | boolean  | false        | hide stop button. |
+| disableRelod              | boolean  | false        | hide reload button. |
 | disableFullscreen         | boolean  | false        | hide fullscreen button. |
 | disablePlaylist           | boolean  | () => {}     | hide video playlist button. |
+
+### OptimizationConfig (only for FlatList)
+
+| prop                      | type     | default      | description                                 |
+| ------------------------- | -------- | ------------ | --------------------------------------------|
+| index                     | number    | 0           | flatlist index.       |
+| activeIndex               | number    | -1          | video title.          |
+| optimize                  | boolean   | false       | poster url.           |
+
 
 ## Enevt props
 | prop                      | type     | default      | description                                 |
@@ -112,15 +129,13 @@ const onPausePress = () => {
 | skipNext                  | func     | () => {}     | skip to next video.|
 | skipBack                  | func     | () => {}     | skip to prvious video.|
 | reload                    | func     | () => {}     | call to reload a video.|
-| setLoop                   | func     | () => {}     | call to loop a video.|
-| setMuted                  | func     | () => {}     | call to mute a video.|
-| setVolume                 | func     | () => {}     | set volume of player (0 to 100).|
-| setBrightness             | func     | () => {}     | set brightness of player (0 to 100).|
-| setPlaybackSpeed          | func     | () => {}     | set video playback speed for player.|
-| setPlaylist               | func     | () => {}     | set video playlist.|
-| setActiveIndex            | func     | () => {}     | set index of playlist which will be played.|
-| setResizeMode             | func     | () => {}     | set video aspect ratio.|
+| load                      | func     | () => {}     | call to load a video.|
 | setFullScreenMode         | func     | () => {}     | set fullscreen mode.|
+
+## ToDo
+
+-[] Custom icon support
+
 
 ## Contributing
 

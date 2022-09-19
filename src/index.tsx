@@ -1,4 +1,26 @@
 import NexenPlayer from './components/NexenPlayer';
-import { ControlHideMode, LayoutMode, EdgeInsets, PlaybackSpeed, PlaylistItem, NexenPlayerRef }  from './components/NexenPlayer';
+import {
+  PlayerSource,
+  PlayerConfig,
+  OptimizationConfig,
+  ControlHideMode,
+  LayoutMode,
+  EdgeInsets,
+  PlaybackSpeed,
+  PlaylistItem,
+  NexenPlayerRef,
+} from './components/NexenPlayer';
+import IconButton from './components/IconButton'
 export default NexenPlayer;
-export { ControlHideMode, LayoutMode, EdgeInsets, PlaybackSpeed, PlaylistItem, NexenPlayerRef }
+export {
+  PlayerSource,
+  PlayerConfig,
+  OptimizationConfig,
+  ControlHideMode,
+  LayoutMode,
+  EdgeInsets,
+  PlaybackSpeed,
+  PlaylistItem,
+  NexenPlayerRef,
+  IconButton,
+};

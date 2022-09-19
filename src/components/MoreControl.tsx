@@ -19,7 +19,7 @@ import {
   IconZap,
 } from '../assets/icons';
 import GradientView from './GradientView';
-import { EdgeInsets } from './NexenPlayer';
+import { EdgeInsets, PlayerConfig } from './NexenPlayer';
 import { withAnimation } from '../hoc/withAnimation';
 import ModalView from './ModalView';
 
@@ -31,9 +31,10 @@ export type MoreItem = {
 
 type MoreControlProps = {
   fullScreen: boolean;
-  disablePlaylist?: boolean;
-  nexenTheme?: NexenTheme;
+  disablePlaylistAndSkip?: boolean;
   insets?: EdgeInsets;
+  playerConfig?: PlayerConfig;
+  nexenTheme?: NexenTheme;
   style?: StyleProp<ViewStyle>;
   onItemPress?: (item: MoreItem) => void;
 };
@@ -42,8 +43,9 @@ const MoreControl = (props: MoreControlProps) => {
   const {
     style,
     fullScreen,
-    disablePlaylist,
+    disablePlaylistAndSkip,
     insets,
+    playerConfig,
     nexenTheme,
     onItemPress,
   } = props;
@@ -88,7 +90,7 @@ const MoreControl = (props: MoreControlProps) => {
       // },
     ];
 
-    if (!disablePlaylist) {
+    if (!disablePlaylistAndSkip && !playerConfig?.disablePlaylist) {
       MORE_ITEMS.splice(3, 0, {
         id: 'playlist',
         icon: <IconFilm size={ICON_SIZE} color={ICON_COLOR} />,
@@ -96,7 +98,7 @@ const MoreControl = (props: MoreControlProps) => {
       });
     }
     setMoreItems(MORE_ITEMS);
-  }, [disablePlaylist]);
+  }, [playerConfig]);
 
   const containerStyle = {
     top: CONTAINER_VERTICAL_PADDING,

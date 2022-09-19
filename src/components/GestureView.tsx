@@ -36,7 +36,7 @@ import {
 } from '../utils/StringUtil';
 import { getAlphaColor } from '../utils/ColorUtil';
 import { getBrightnessIcon, getVolumeIcon } from '../utils/ComponentUtil';
-import type { Dimension, LayoutMode } from './NexenPlayer';
+import type { Dimension, LayoutMode, PlayerConfig } from './NexenPlayer';
 import type { NexenTheme } from '../utils/Theme';
 
 const FORWARD_OR_REWIND_DURATION = 10;
@@ -63,20 +63,14 @@ type GestureViewProps = {
   fullScreen: boolean;
   locked: boolean;
   error?: boolean;
-  errorText?: string;
   isSeeking: React.MutableRefObject<boolean>;
   isSliding: React.MutableRefObject<boolean>;
   isSeekable: React.MutableRefObject<boolean>;
   gestureEnabled: React.MutableRefObject<boolean>;
-
   durationTime: React.MutableRefObject<number>;
   currentTime: React.MutableRefObject<number>;
-
-  layoutMode?: LayoutMode;
+  playerConfig?: PlayerConfig;
   dimension: Dimension;
-  volume?: number;
-  brightness?: number;
-  doubleTapTime?: number;
   nexenTheme?: NexenTheme;
   onTapDetected?: (event: TapEventType, value?: number) => void;
   onGestureStart?: (event: GestureEventType, value: number) => void;
@@ -90,18 +84,14 @@ const GestureView = (props: GestureViewProps) => {
     fullScreen,
     locked,
     error,
-    errorText,
     isSeeking,
     isSliding,
     isSeekable,
     gestureEnabled,
-    layoutMode,
     dimension,
     currentTime,
     durationTime,
-    volume,
-    brightness,
-    doubleTapTime,
+    playerConfig,
     nexenTheme,
     onTapDetected,
     onGestureStart,
@@ -143,7 +133,7 @@ const GestureView = (props: GestureViewProps) => {
   const minTime = React.useRef(0);
   const maxTime = React.useRef(0);
   const symbol = React.useRef('');
-  const layoutOption = React.useRef(layoutMode);
+  const layoutOption = React.useRef(playerConfig?.layoutMode);
 
   const RIPPLE_ICON_SIZE = nexenTheme?.sizes?.rippleIconSize;
   const RIPPLE_ICON_COLOR = nexenTheme?.colors?.rippleIconColor;
@@ -216,8 +206,8 @@ const GestureView = (props: GestureViewProps) => {
   }, [nexenTheme]);
 
   React.useEffect(() => {
-    layoutOption.current = layoutMode;
-  }, [layoutMode]);
+    layoutOption.current = playerConfig?.layoutMode;
+  }, [playerConfig]);
 
   React.useEffect(() => {
     const { width, height } = dimension;
@@ -229,20 +219,20 @@ const GestureView = (props: GestureViewProps) => {
     brightnessFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
 
     seekVolume.current = clamp(
-      originalToSeekValue(volume!, MAX_VOLUME, height * BAR_HEIGHT_PERCENTAGE),
+      originalToSeekValue(playerConfig?.volume!, MAX_VOLUME, height * BAR_HEIGHT_PERCENTAGE),
       0,
       height * BAR_HEIGHT_PERCENTAGE
     );
     
     volumeTipViewRef.current?.updateState({
-      tipText: `${volume}%`,
-      icon: getVolumeIcon(volume!, MAX_VOLUME, volumeBarTheme.iconSize, volumeBarTheme.iconColor),
+      tipText: `${playerConfig?.volume}%`,
+      icon: getVolumeIcon(playerConfig?.volume!, MAX_VOLUME, volumeBarTheme.iconSize, volumeBarTheme.iconColor),
     });
     volumeBarHeight.setValue(seekVolume.current);
 
     seekBrightness.current = clamp(
       originalToSeekValue(
-        brightness!,
+        playerConfig?.brightness!,
         MAX_BRIGHTNESS,
         height * BAR_HEIGHT_PERCENTAGE
       ) + seekBrightnessDy.current,
@@ -251,9 +241,9 @@ const GestureView = (props: GestureViewProps) => {
     );
     
     brightnessTipViewRef.current?.updateState({
-      tipText: `${brightness}%`,
+      tipText: `${playerConfig?.brightness}%`,
       icon: getBrightnessIcon(
-        brightness!,
+        playerConfig?.brightness!,
         MAX_BRIGHTNESS,
         brightnessBarTheme.iconSize,
         brightnessBarTheme.iconColor
@@ -261,7 +251,7 @@ const GestureView = (props: GestureViewProps) => {
     });
     brightnessBarHeight.setValue(seekBrightness.current);
     
-  }, [volume, brightness, dimension]);
+  }, [playerConfig, dimension]);
 
   React.useEffect(() => {
     return () => {
@@ -334,7 +324,7 @@ const GestureView = (props: GestureViewProps) => {
       tapTimeoutRef.current = setTimeout(() => {
         onTapDetected?.(TapEventType.SINGLE_TAP);
         tapTimeoutRef.current = null;
-      }, doubleTapTime);
+      }, playerConfig?.doubleTapTime);
     }
   };
 
@@ -677,7 +667,7 @@ const GestureView = (props: GestureViewProps) => {
         activeOpacity={1}
         onPress={onScreenTouch}
       >
-        {layoutMode !== 'basic' && (
+        {playerConfig?.layoutMode !== 'basic' && (
           <RippleView
             ref={leftRippleViewRef}
             style={{
@@ -697,7 +687,7 @@ const GestureView = (props: GestureViewProps) => {
             />
           </RippleView>
         )}
-        {layoutMode !== 'basic' && (
+        {playerConfig?.layoutMode !== 'basic' && (
           <RippleView
             ref={rightRippleViewRef}
             style={{
@@ -718,7 +708,7 @@ const GestureView = (props: GestureViewProps) => {
           </RippleView>
         )}
 
-        {layoutMode !== 'basic' && (
+        {playerConfig?.layoutMode !== 'basic' && (
           <SeekBarTipView
             ref={volumeTipViewRef}
             parentStyle={{
@@ -739,7 +729,7 @@ const GestureView = (props: GestureViewProps) => {
             theme={volumeBarTheme}
           />
         )}
-        {layoutMode !== 'basic' && (
+        {playerConfig?.layoutMode !== 'basic' && (
           <SeekBarTipView
             ref={brightnessTipViewRef}
             parentStyle={{
@@ -760,7 +750,7 @@ const GestureView = (props: GestureViewProps) => {
             theme={brightnessBarTheme}
           />
         )}
-        {layoutMode !== 'basic' && (
+        {playerConfig?.layoutMode !== 'basic' && (
           <TipView
             ref={tipViewRef}
             style={{
@@ -780,7 +770,7 @@ const GestureView = (props: GestureViewProps) => {
               backgroundColor: CONTAINER_BACKGROUND_COLOR,
             }}
             theme={errorTheme}
-            errorText={errorText}
+            errorText={playerConfig?.errorText}
           />
         )}
       </TouchableOpacity>

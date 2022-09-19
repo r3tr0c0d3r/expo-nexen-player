@@ -1,10 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, View, Button, Text } from 'react-native';
-import {
-  SafeAreaProvider,
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { StyleSheet, View, Button, Text, Alert } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import Font, { useFonts } from 'expo-font';
 import {
@@ -12,16 +7,41 @@ import {
   Montserrat_500Medium,
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
-import Player from './Player';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import SingleScreen from './SingleScreen';
+import FlatlistScreen from './FlatlistScreen';
+import { IconFlatList, IconScrollView, IconSingle } from '../assets/icons';
+import ScrollViewScreen from './ScrollViewScreen';
+
 
 export default function App() {
-  
+  const Tab = createBottomTabNavigator();
 
   return (
     <SafeAreaProvider style={styles.container}>
-      <View style={styles.topBar}/>
-      <Player />
-      <View style={styles.bottomBar}/>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+              if (route.name === 'Single') {
+                return <IconSingle size={size} color={color} />;
+              } else if (route.name === 'ScrollView') {
+                return <IconScrollView size={size} color={color} />;
+              } else {
+                return <IconFlatList size={size} color={color} />;
+              }
+            },
+            tabBarActiveTintColor: 'tomato',
+            tabBarInactiveTintColor: 'gray',
+          })}
+        >
+          <Tab.Screen name="Single" component={SingleScreen} />
+          <Tab.Screen name="ScrollView" component={ScrollViewScreen} />
+          <Tab.Screen name="FlatList" component={FlatlistScreen} options={{headerShown: false}}/>
+        </Tab.Navigator>
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 }
@@ -29,7 +49,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#414141'
+    backgroundColor: '#414141',
   },
   player: {
     width: '100%',
@@ -48,7 +68,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 10,
-    // backgroundColor: 'pink',
+    backgroundColor: 'pink',
     zIndex: 1,
   },
 });

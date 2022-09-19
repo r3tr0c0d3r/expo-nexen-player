@@ -43,14 +43,12 @@ const GradientView = (props: GradientViewProps) => {
   } = props;
 
   const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
-  // console.log(`GradientView :: dimensions: ${JSON.stringify(dimensions)}`)
 
   const onLayoutChange = async (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     const { width: w, height: h } = dimensions;
     if (w !== width || h !== height) {
       setDimensions({ width, height });
-      // console.log(`GradientView onLayoutChange:: width: ${width} height: ${height}`);
     }
   };
 

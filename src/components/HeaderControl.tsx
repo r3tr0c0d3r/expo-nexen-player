@@ -15,7 +15,7 @@ import {
 import IconButton from './IconButton';
 import GradientView from './GradientView';
 import type { NexenTheme } from '../utils/Theme';
-import type { EdgeInsets, LayoutMode } from './NexenPlayer';
+import type { EdgeInsets, LayoutMode, PlayerConfig } from './NexenPlayer';
 import IconTagView, {
   IconTagViewRef,
   IconTagViewState,
@@ -33,12 +33,9 @@ type HeaderControlProps = {
   marginTop: Animated.Value;
   fullScreen: boolean;
   locked: boolean;
-  disableBack?: boolean;
-  disableRatio?: boolean;
-  disableMore?: boolean;
   insets?: EdgeInsets;
+  playerConfig?: PlayerConfig;
   nexenTheme?: NexenTheme;
-  layoutMode?: LayoutMode;
   onBackPress?: () => void;
   onAspectRatioPress?: () => void;
   onMorePress?: () => void;
@@ -52,12 +49,9 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
       marginTop,
       fullScreen,
       locked,
-      disableBack,
-      disableRatio,
-      disableMore,
-      nexenTheme,
-      layoutMode,
       insets,
+      playerConfig,
+      nexenTheme,
       onBackPress,
       onAspectRatioPress,
       onMorePress,
@@ -69,16 +63,16 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
     const ICON_COLOR = nexenTheme?.colors?.primaryIconColor;
     const TITLE_TEXT_SIZE = nexenTheme?.sizes?.primaryTextSize;
     const TITLE_TEXT_COLOR = nexenTheme?.colors?.primaryTextColor;
-    const CONTAINER_VERTICAL_PADDING = fullScreen 
-    ? insets?.top! > 0 
-    ? insets?.top! 
-    : nexenTheme?.sizes?.paddingVertical
-    : nexenTheme?.sizes?.paddingVertical;
-    const CONTAINER_HORIZONTAL_PADDING = fullScreen 
-    ? (insets?.left! + insets?.right!) / 2 > 0 
-    ? (insets?.left! + insets?.right!) / 2
-    : nexenTheme?.sizes?.paddingHorizontal
-    : nexenTheme?.sizes?.paddingHorizontal;
+    const CONTAINER_VERTICAL_PADDING = fullScreen
+      ? insets?.top! > 0
+        ? insets?.top!
+        : nexenTheme?.sizes?.paddingVertical
+      : nexenTheme?.sizes?.paddingVertical;
+    const CONTAINER_HORIZONTAL_PADDING = fullScreen
+      ? (insets?.left! + insets?.right!) / 2 > 0
+        ? (insets?.left! + insets?.right!) / 2
+        : nexenTheme?.sizes?.paddingHorizontal
+      : nexenTheme?.sizes?.paddingHorizontal;
     const CONTAINER_HEIGHT =
       nexenTheme?.sizes?.primaryIconSize! +
       10 * 2 +
@@ -114,7 +108,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
         borderColor:
           nexenTheme?.tagView?.borderColor ||
           getAlphaColor(nexenTheme?.colors?.accentColor!, 0.7),
-        backgroundColor: 
+        backgroundColor:
           nexenTheme?.tagView?.backgroundColor ||
           getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.0),
       };
@@ -123,7 +117,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
     const titleTextStyle = {
       fontSize: TITLE_TEXT_SIZE,
       color: TITLE_TEXT_COLOR,
-      fontFamily: nexenTheme?.fonts?.primaryFont
+      fontFamily: nexenTheme?.fonts?.primaryFont,
     };
 
     return (
@@ -161,7 +155,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
               }}
             >
               <View style={[styles.iconButtonContainer, { flexShrink: 1 }]}>
-                {!disableBack && !locked && (
+                {!locked && !playerConfig?.disableBack && (
                   <IconButton
                     style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
                     onPress={onBackPress}
@@ -179,23 +173,29 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
               </View>
 
               <View style={[styles.iconButtonContainer]}>
-                {!locked && layoutMode === 'advanced' && (
-                  <IconTagView ref={iconTagViewRef}
-                   style={{marginHorizontal: 4}}
-                   theme={iconTagViewTheme} />
+                {!locked && playerConfig?.layoutMode === 'advanced' && (
+                  <IconTagView
+                    ref={iconTagViewRef}
+                    style={{ marginHorizontal: 4 }}
+                    theme={iconTagViewTheme}
+                  />
                 )}
 
-                {!disableRatio && !locked && layoutMode === 'intermediate' && (
-                  <IconButton onPress={onAspectRatioPress}>
-                    <IconAspectRatio size={ICON_SIZE} color={ICON_COLOR} />
-                  </IconButton>
-                )}
+                {!locked &&
+                  !playerConfig?.disableResizeMode &&
+                  playerConfig?.layoutMode === 'intermediate' && (
+                    <IconButton onPress={onAspectRatioPress}>
+                      <IconAspectRatio size={ICON_SIZE} color={ICON_COLOR} />
+                    </IconButton>
+                  )}
 
-                {!disableMore && !locked && layoutMode === 'advanced' && (
-                  <IconButton onPress={onMorePress}>
-                    <IconMoreHorizontal size={ICON_SIZE} color={ICON_COLOR} />
-                  </IconButton>
-                )}
+                {!locked &&
+                  !playerConfig?.disableMore &&
+                  playerConfig?.layoutMode === 'advanced' && (
+                    <IconButton onPress={onMorePress}>
+                      <IconMoreHorizontal size={ICON_SIZE} color={ICON_COLOR} />
+                    </IconButton>
+                  )}
               </View>
             </View>
           </View>
@@ -208,9 +208,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
 export default React.memo(HeaderControl);
 
 HeaderControl.defaultProps = {
-  disableBack: false,
-  disableRatio: false,
-  disableMore: false,
+
 };
 
 const styles = StyleSheet.create({

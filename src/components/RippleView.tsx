@@ -23,7 +23,6 @@ type RippleViewProps = {
   style?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   rippleStyle?: StyleProp<ViewStyle>;
-  // onAnimationEnd?: () => void;
 };
 
 export type RippleEvent = {x: number; y: number};

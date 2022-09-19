@@ -16,7 +16,6 @@ type LoaderProps = {
 };
 
 const Loader = (props: LoaderProps) => {
-  console.log(`Loader render!!`);
   const {theme, style} = props;
   
   const spinValue = React.useRef(new Animated.Value(0)).current;
