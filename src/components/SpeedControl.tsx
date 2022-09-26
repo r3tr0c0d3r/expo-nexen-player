@@ -12,13 +12,13 @@ import GradientView from './GradientView';
 import StepSeekBar, { StepSeekBarTheme } from './StepSeekBar';
 import ModalView from './ModalView';
 import { withAnimation } from '../hoc/withAnimation';
-import { EdgeInsets } from './NexenPlayer';
+import { EdgeInsets, PlaybackSpeed } from './NexenPlayer';
 
 const speedData = ['0.25', '0.5', '0.75', '1.0', '1.5', '2.0', '3.0'];
 
 type SpeedControlProps = {
   style?: StyleProp<ViewStyle>;
-  currentSpeed?: number;
+  currentSpeed?: PlaybackSpeed;
   fullScreen: boolean;
   nexenTheme?: NexenTheme;
   insets?: EdgeInsets;
@@ -26,37 +26,33 @@ type SpeedControlProps = {
 };
 
 const SpeedControl = (props: SpeedControlProps) => {
-  const {
-    style,
-    currentSpeed,
-    fullScreen,
-    nexenTheme,
-    insets,
-    onSpeedChange,
-  } = props;
+  const { style, currentSpeed, fullScreen, nexenTheme, insets, onSpeedChange } =
+    props;
 
-  const srtValue = String(currentSpeed);
-  const curerntIndex = speedData.indexOf(srtValue!);
+  const curerntIndex = speedData.indexOf(currentSpeed!);
   const validIndex = curerntIndex < 0 ? 3 : curerntIndex;
 
-    const CONTAINER_HORIZONTAL_PADDING = fullScreen 
-    ? (insets?.left! + insets?.right!) / 2 > 0 
-    ? (insets?.left! + insets?.right!) / 2
-    : 8
+  const CONTAINER_HORIZONTAL_PADDING = fullScreen
+    ? (insets?.left! + insets?.right!) / 2 > 0
+      ? (insets?.left! + insets?.right!) / 2
+      : 8
     : 8;
-
 
   const stepSeekBarTheme = React.useMemo((): StepSeekBarTheme => {
     return {
       font: nexenTheme?.fonts?.secondaryFont,
-      lineColor: nexenTheme?.speedSeekBar?.lineColor
-      || getAlphaColor(nexenTheme?.colors?.accentColor!, 0.7),
-      dotColor: nexenTheme?.speedSeekBar?.dotColor
-      || nexenTheme?.colors?.secondaryColor,
-      thumbColor: nexenTheme?.speedSeekBar?.thumbColor
-      || nexenTheme?.colors?.secondaryColor,
-      textColor: nexenTheme?.speedSeekBar?.textColor
-      || nexenTheme?.colors?.secondaryTextColor,
+      lineColor:
+        nexenTheme?.speedSeekBar?.lineColor ||
+        getAlphaColor(nexenTheme?.colors?.accentColor!, 0.7),
+      dotColor:
+        nexenTheme?.speedSeekBar?.dotColor ||
+        nexenTheme?.colors?.secondaryColor,
+      thumbColor:
+        nexenTheme?.speedSeekBar?.thumbColor ||
+        nexenTheme?.colors?.secondaryColor,
+      textColor:
+        nexenTheme?.speedSeekBar?.textColor ||
+        nexenTheme?.colors?.secondaryTextColor,
 
       textSize: nexenTheme?.speedSeekBar?.textSize,
       lineHeight: nexenTheme?.speedSeekBar?.lineHeight,
@@ -67,7 +63,8 @@ const SpeedControl = (props: SpeedControlProps) => {
     };
   }, [nexenTheme]);
 
-  const SEEK_BAR_HEIGHT = stepSeekBarTheme.thumbSize! + 12 * 2 + stepSeekBarTheme?.textSize!;
+  const SEEK_BAR_HEIGHT =
+    stepSeekBarTheme.thumbSize! + 12 * 2 + stepSeekBarTheme?.textSize!;
 
   const containerStyle = {
     left: CONTAINER_HORIZONTAL_PADDING,
@@ -75,20 +72,14 @@ const SpeedControl = (props: SpeedControlProps) => {
     bottom: 0,
     paddingHorizontal: 0,
     paddingVertical: 0,
-  }
+  };
 
   const stepSeekBarStyle = {
     height: SEEK_BAR_HEIGHT,
-  }
+  };
 
   return (
-    <ModalView
-      style={[
-        styles.container,
-        style,
-        containerStyle
-      ]}
-    >
+    <ModalView style={[styles.container, style, containerStyle]}>
       <GradientView
         style={{
           height: '100%',
@@ -113,9 +104,7 @@ const SpeedControl = (props: SpeedControlProps) => {
 
 export default withAnimation(SpeedControl);
 
-SpeedControl.defaultProps = {
-  currentSpeed: 1.0,
-};
+SpeedControl.defaultProps = {};
 
 const styles = StyleSheet.create({
   container: {

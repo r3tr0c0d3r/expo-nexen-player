@@ -93,8 +93,10 @@ const StepSeekBar = (props: StepSeekBarProps) => {
   };
 
   const handleComplete = (index: number) => {
-    const value = data[index];
-    onStepChange?.(value);
+    if (index >= 0 && index < data.length) {
+      const value = data[index];
+      onStepChange?.(value);
+    }
   };
 
   const panResponder = React.useRef(
@@ -165,10 +167,15 @@ const StepSeekBar = (props: StepSeekBarProps) => {
         const index = Math.floor(locationX.current / stepWidth.current);
         const remainder = locationX.current % stepWidth.current;
         if (Math.abs(remainder) >= Math.abs(stepThreshold.current)) {
-          const nextPosition = stepWidth.current * (index + 1);
+          let nextIndex = index + 1;
+          let nextPosition = stepWidth.current * (nextIndex);
+          if (nextPosition > seekDistance.current) {
+            nextIndex = index;
+            nextPosition = stepWidth.current * (nextIndex);
+          }
           locationX.current = nextPosition;
           moveTo(nextPosition, () => {
-            handleComplete(index + 1);
+            handleComplete(nextIndex);
           });
         } else {
           const nextPosition = stepWidth.current * index;

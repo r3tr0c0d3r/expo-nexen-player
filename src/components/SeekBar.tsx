@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Animated,
-  ColorValue,
   GestureResponderEvent,
   I18nManager,
   LayoutChangeEvent,

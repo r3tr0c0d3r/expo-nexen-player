@@ -6,20 +6,18 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
   ViewStyle,
 } from 'react-native';
 import type { NexenTheme } from '../utils/Theme';
 import {
   IconFilm,
-  IconInfo,
   IconReload,
   IconRepeat,
   IconUnlock,
   IconZap,
 } from '../assets/icons';
 import GradientView from './GradientView';
-import { EdgeInsets, PlayerConfig } from './NexenPlayer';
+import { EdgeInsets, NexenConfig } from './NexenPlayer';
 import { withAnimation } from '../hoc/withAnimation';
 import ModalView from './ModalView';
 
@@ -33,7 +31,7 @@ type MoreControlProps = {
   fullScreen: boolean;
   disablePlaylistAndSkip?: boolean;
   insets?: EdgeInsets;
-  playerConfig?: PlayerConfig;
+  playerConfig?: NexenConfig;
   nexenTheme?: NexenTheme;
   style?: StyleProp<ViewStyle>;
   onItemPress?: (item: MoreItem) => void;
@@ -55,10 +53,10 @@ const MoreControl = (props: MoreControlProps) => {
   const ICON_COLOR = nexenTheme?.colors?.secondaryIconColor;
   const TEXT_COLOR = nexenTheme?.colors?.secondaryTextColor;
 
-  const CONTAINER_VERTICAL_PADDING = fullScreen 
-    ? (insets?.top! + insets?.bottom!) / 2 > 0 
-    ? (insets?.top! + insets?.bottom!) / 2
-    : nexenTheme?.sizes?.paddingVertical
+  const CONTAINER_VERTICAL_PADDING = fullScreen
+    ? (insets?.top! + insets?.bottom!) / 2 > 0
+      ? (insets?.top! + insets?.bottom!) / 2
+      : nexenTheme?.sizes?.paddingVertical
     : nexenTheme?.sizes?.paddingVertical;
 
   React.useEffect(() => {
@@ -90,7 +88,7 @@ const MoreControl = (props: MoreControlProps) => {
       // },
     ];
 
-    if (!disablePlaylistAndSkip && !playerConfig?.disablePlaylist) {
+    if (!disablePlaylistAndSkip && !playerConfig?.disablePlayList) {
       MORE_ITEMS.splice(3, 0, {
         id: 'playlist',
         icon: <IconFilm size={ICON_SIZE} color={ICON_COLOR} />,
@@ -153,9 +151,7 @@ const MoreControl = (props: MoreControlProps) => {
 
 export default withAnimation(MoreControl);
 
-MoreControl.defaultProps = {
-
-};
+MoreControl.defaultProps = {};
 
 const styles = StyleSheet.create({
   container: {

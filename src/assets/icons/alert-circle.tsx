@@ -2,7 +2,7 @@ import React from 'react';
 import { ColorValue } from 'react-native';
 import {Circle, Path, Svg, SvgProps} from 'react-native-svg';
 
-const Play = (props: Props) => {
+const AlertCircle = (props: Props) => {
   const {color, size, ...rest} = props;
   return (
     <Svg
@@ -21,14 +21,14 @@ const Play = (props: Props) => {
   );
 };
 
-export default Play;
+export default AlertCircle;
 
 interface Props extends SvgProps {
   color?: ColorValue;
   size?: string | number;
 }
 
-Play.defaultProps = {
+AlertCircle.defaultProps = {
   color: 'black',
   size: '24',
 };

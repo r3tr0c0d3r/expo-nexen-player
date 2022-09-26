@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import type { NexenTheme, TagViewTheme } from '../utils/Theme';
+import type { TagViewTheme } from '../utils/Theme';
 
 export interface TimeTagViewTheme extends TagViewTheme {
   font?: string;
@@ -30,9 +30,7 @@ const TimeTagView = (props: TimeTagViewProps) => {
 
   return (
     <View style={[styles.container, style, textContainerStyle]}>
-      <Text style={[styles.text, timeTextStyle]}>
-        {timeText}
-      </Text>
+      <Text style={[styles.text, timeTextStyle]}>{timeText}</Text>
     </View>
   );
 };
@@ -47,7 +45,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    
   },
   text: {
     fontSize: 11,

@@ -1,15 +1,12 @@
-import React from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NexenPlayer from 'expo-nexen-player';
 import { StatusBar } from 'expo-status-bar';
 
-type Props = {}
-
-const ScrollViewScreen = (props: Props) => {
-
-    const navigation = useNavigation();
+const ScrollViewScreen = () => {
+  const navigation = useNavigation();
   const edgeinsets = useSafeAreaInsets();
   const [isFullScreen, setIsFullScreen] = React.useState<boolean>(false);
 
@@ -28,13 +25,16 @@ const ScrollViewScreen = (props: Props) => {
     });
   };
 
-  const onFullScreenModeUpdate = async (fullScreen: boolean, index?: number) => {
-    console.log(`Player: onFullScreenModeUpdate:${fullScreen}`);
+  const onFullScreenModeUpdate = async (
+    fullScreen: boolean,
+    index?: number
+  ) => {
+    console.log(`Player: onFullScreenModeUpdate:${fullScreen} index:${index}`);
     if (fullScreen) {
-        hideTabBar();
+      hideTabBar();
       // Orientation.lockToLandscape();
     } else {
-        showTabBar();
+      showTabBar();
       // Orientation.lockToPortrait();
     }
     setIsFullScreen(fullScreen);
@@ -42,8 +42,8 @@ const ScrollViewScreen = (props: Props) => {
 
   return (
     <>
-    <StatusBar hidden={isFullScreen} />
-    <ScrollView
+      <StatusBar hidden={isFullScreen} />
+      <ScrollView
         style={{ flex: 1 }}
         scrollEnabled={isFullScreen ? false : true}
         contentContainerStyle={{
@@ -54,7 +54,7 @@ const ScrollViewScreen = (props: Props) => {
       >
         <NexenPlayer
           style={styles.player}
-          playerSource={{
+          source={{
             source: require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4'),
             poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
             title: "Ryu's Hurricane Kick and Hadoken 1",
@@ -64,7 +64,7 @@ const ScrollViewScreen = (props: Props) => {
         />
         <NexenPlayer
           style={styles.player}
-          playerSource={{
+          source={{
             source: require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4'),
             poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
             title: "Ryu's Hurricane Kick and Hadoken 2",
@@ -74,7 +74,7 @@ const ScrollViewScreen = (props: Props) => {
         />
         <NexenPlayer
           style={styles.player}
-          playerSource={{
+          source={{
             source: require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4'),
             poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
             title: "Ryu's Hurricane Kick and Hadoken 3",
@@ -84,7 +84,7 @@ const ScrollViewScreen = (props: Props) => {
         />
         <NexenPlayer
           style={styles.player}
-          playerSource={{
+          source={{
             source: require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4'),
             poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
             title: "Ryu's Hurricane Kick and Hadoken 4",
@@ -94,7 +94,7 @@ const ScrollViewScreen = (props: Props) => {
         />
         <NexenPlayer
           style={styles.player}
-          playerSource={{
+          source={{
             source: require('../assets/videos/Street_Fighter_V_Stop_Motion.mp4'),
             poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
             title: "Ryu's Hurricane Kick and Hadoken 5",
@@ -104,17 +104,17 @@ const ScrollViewScreen = (props: Props) => {
         />
       </ScrollView>
     </>
-  )
-}
+  );
+};
 
-export default ScrollViewScreen
+export default ScrollViewScreen;
 
 const styles = StyleSheet.create({
-    player: {
-        width: '100%',
-        height: 260,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'pink',
-      },
-})
+  player: {
+    width: '100%',
+    height: 260,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'pink',
+  },
+});

@@ -1,26 +1,30 @@
 import NexenPlayer from './components/NexenPlayer';
 import {
-  PlayerSource,
-  PlayerConfig,
-  OptimizationConfig,
   ControlHideMode,
-  LayoutMode,
   EdgeInsets,
-  PlaybackSpeed,
-  PlaylistItem,
+  LayoutMode,
+  NexenConfig,
+  NexenSource,
+  NexenPlayerProps,
   NexenPlayerRef,
+  PlaybackSpeed,
+  PlayList,
+  PlayListItem,
+  ResizeMode,
 } from './components/NexenPlayer';
-import IconButton from './components/IconButton'
+import { NexenTheme } from './utils/Theme';
 export default NexenPlayer;
 export {
-  PlayerSource,
-  PlayerConfig,
-  OptimizationConfig,
   ControlHideMode,
-  LayoutMode,
   EdgeInsets,
-  PlaybackSpeed,
-  PlaylistItem,
+  LayoutMode,
+  NexenConfig,
+  NexenSource,
+  NexenPlayerProps,
   NexenPlayerRef,
-  IconButton,
+  NexenTheme,
+  PlaybackSpeed,
+  PlayList,
+  PlayListItem,
+  ResizeMode,
 };

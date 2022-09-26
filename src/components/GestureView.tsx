@@ -3,7 +3,6 @@ import {
   Animated,
   GestureResponderEvent,
   I18nManager,
-  LayoutChangeEvent,
   PanResponder,
   PanResponderGestureState,
   StyleProp,
@@ -36,7 +35,7 @@ import {
 } from '../utils/StringUtil';
 import { getAlphaColor } from '../utils/ColorUtil';
 import { getBrightnessIcon, getVolumeIcon } from '../utils/ComponentUtil';
-import type { Dimension, LayoutMode, PlayerConfig } from './NexenPlayer';
+import type { Dimension, NexenConfig } from './NexenPlayer';
 import type { NexenTheme } from '../utils/Theme';
 
 const FORWARD_OR_REWIND_DURATION = 10;
@@ -69,7 +68,7 @@ type GestureViewProps = {
   gestureEnabled: React.MutableRefObject<boolean>;
   durationTime: React.MutableRefObject<number>;
   currentTime: React.MutableRefObject<number>;
-  playerConfig?: PlayerConfig;
+  playerConfig?: NexenConfig;
   dimension: Dimension;
   nexenTheme?: NexenTheme;
   onTapDetected?: (event: TapEventType, value?: number) => void;
@@ -94,7 +93,6 @@ const GestureView = (props: GestureViewProps) => {
     playerConfig,
     nexenTheme,
     onTapDetected,
-    onGestureStart,
     onGestureMove,
     onGestureEnd,
   } = props;
@@ -137,9 +135,10 @@ const GestureView = (props: GestureViewProps) => {
 
   const RIPPLE_ICON_SIZE = nexenTheme?.sizes?.rippleIconSize;
   const RIPPLE_ICON_COLOR = nexenTheme?.colors?.rippleIconColor;
-  
-  const CONTAINER_BACKGROUND_COLOR = nexenTheme?.colors?.modalBackgroundColor
-  || getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.7);
+
+  const CONTAINER_BACKGROUND_COLOR =
+    nexenTheme?.colors?.modalBackgroundColor ||
+    getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.7);
   const CONTAINER_BORDER_RADIUS = nexenTheme?.sizes?.modalCornerRadius;
 
   const rtlMultiplier = React.useRef(1);
@@ -149,17 +148,21 @@ const GestureView = (props: GestureViewProps) => {
   const volumeBarTheme = React.useMemo((): SeekBarTipViewTheme => {
     return {
       font: nexenTheme?.fonts?.secondaryFont,
-      barColor: nexenTheme?.volumeSeekBar?.barColor ||
+      barColor:
+        nexenTheme?.volumeSeekBar?.barColor ||
         getAlphaColor(nexenTheme?.colors?.secondaryColor!, 0.8),
-      underlayColor: nexenTheme?.volumeSeekBar?.underlayColor ||
+      underlayColor:
+        nexenTheme?.volumeSeekBar?.underlayColor ||
         getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.3),
-      textColor: nexenTheme?.tagView?.textColor 
-        || nexenTheme?.colors?.secondaryTextColor,
-      textSize: nexenTheme?.tagView?.textSize
-        || nexenTheme?.sizes?.secondaryTextSize,
+      textColor:
+        nexenTheme?.tagView?.textColor ||
+        nexenTheme?.colors?.secondaryTextColor,
+      textSize:
+        nexenTheme?.tagView?.textSize || nexenTheme?.sizes?.secondaryTextSize,
       iconSize: nexenTheme?.sizes?.secondaryIconSize,
-      iconColor: nexenTheme?.tagView?.iconColor
-        || nexenTheme?.colors?.secondaryIconColor,
+      iconColor:
+        nexenTheme?.tagView?.iconColor ||
+        nexenTheme?.colors?.secondaryIconColor,
     };
   }, [nexenTheme, fullScreen]);
 
@@ -172,24 +175,27 @@ const GestureView = (props: GestureViewProps) => {
       underlayColor:
         nexenTheme?.volumeSeekBar?.underlayColor ||
         getAlphaColor(nexenTheme?.colors?.primaryColor!, 0.3),
-      textColor: nexenTheme?.tagView?.textColor 
-        || nexenTheme?.colors?.secondaryTextColor,
-      textSize: nexenTheme?.tagView?.textSize
-        || nexenTheme?.sizes?.secondaryTextSize,
-      iconSize: nexenTheme?.tagView?.iconSize
-        || nexenTheme?.sizes?.secondaryIconSize,
-      iconColor: nexenTheme?.tagView?.iconColor
-        || nexenTheme?.colors?.secondaryIconColor,
+      textColor:
+        nexenTheme?.tagView?.textColor ||
+        nexenTheme?.colors?.secondaryTextColor,
+      textSize:
+        nexenTheme?.tagView?.textSize || nexenTheme?.sizes?.secondaryTextSize,
+      iconSize:
+        nexenTheme?.tagView?.iconSize || nexenTheme?.sizes?.secondaryIconSize,
+      iconColor:
+        nexenTheme?.tagView?.iconColor ||
+        nexenTheme?.colors?.secondaryIconColor,
     };
   }, [nexenTheme, fullScreen]);
 
   const tipViewTheme = React.useMemo((): TipViewTheme => {
     return {
       font: nexenTheme?.fonts?.secondaryFont,
-      textColor: nexenTheme?.tipView?.textColor 
-      || nexenTheme?.colors?.secondaryTextColor,
-      textSize: nexenTheme?.tipView?.textSize
-      || nexenTheme?.sizes?.secondaryTextSize,
+      textColor:
+        nexenTheme?.tipView?.textColor ||
+        nexenTheme?.colors?.secondaryTextColor,
+      textSize:
+        nexenTheme?.tipView?.textSize || nexenTheme?.sizes?.secondaryTextSize,
     };
   }, [nexenTheme, fullScreen]);
 
@@ -197,10 +203,12 @@ const GestureView = (props: GestureViewProps) => {
     return {
       font: nexenTheme?.fonts?.secondaryFont,
       iconSize: 40,
-      iconColor: nexenTheme?.tipView?.iconColor
-      || nexenTheme?.colors?.secondaryIconColor,
-      textColor: nexenTheme?.tipView?.textColor
-      || nexenTheme?.colors?.secondaryTextColor,
+      iconColor:
+        nexenTheme?.tipView?.iconColor ||
+        nexenTheme?.colors?.secondaryIconColor,
+      textColor:
+        nexenTheme?.tipView?.textColor ||
+        nexenTheme?.colors?.secondaryTextColor,
       textSize: 16,
     };
   }, [nexenTheme]);
@@ -219,14 +227,23 @@ const GestureView = (props: GestureViewProps) => {
     brightnessFactor.current = height / (height * BAR_HEIGHT_PERCENTAGE);
 
     seekVolume.current = clamp(
-      originalToSeekValue(playerConfig?.volume!, MAX_VOLUME, height * BAR_HEIGHT_PERCENTAGE),
+      originalToSeekValue(
+        playerConfig?.volume!,
+        MAX_VOLUME,
+        height * BAR_HEIGHT_PERCENTAGE
+      ),
       0,
       height * BAR_HEIGHT_PERCENTAGE
     );
-    
+
     volumeTipViewRef.current?.updateState({
       tipText: `${playerConfig?.volume}%`,
-      icon: getVolumeIcon(playerConfig?.volume!, MAX_VOLUME, volumeBarTheme.iconSize, volumeBarTheme.iconColor),
+      icon: getVolumeIcon(
+        playerConfig?.volume!,
+        MAX_VOLUME,
+        volumeBarTheme.iconSize,
+        volumeBarTheme.iconColor
+      ),
     });
     volumeBarHeight.setValue(seekVolume.current);
 
@@ -239,7 +256,7 @@ const GestureView = (props: GestureViewProps) => {
       0,
       height * BAR_HEIGHT_PERCENTAGE
     );
-    
+
     brightnessTipViewRef.current?.updateState({
       tipText: `${playerConfig?.brightness}%`,
       icon: getBrightnessIcon(
@@ -250,7 +267,6 @@ const GestureView = (props: GestureViewProps) => {
       ),
     });
     brightnessBarHeight.setValue(seekBrightness.current);
-    
   }, [playerConfig, dimension]);
 
   React.useEffect(() => {
@@ -289,13 +305,17 @@ const GestureView = (props: GestureViewProps) => {
 
   const handleDoubleTapForward = () => {
     const time = currentTime.current + FORWARD_OR_REWIND_DURATION;
-    rightRippleViewRef.current?.onPress(getForOrRewTimeTipText('+', FORWARD_OR_REWIND_DURATION, time));
+    rightRippleViewRef.current?.onPress(
+      getForOrRewTimeTipText('+', FORWARD_OR_REWIND_DURATION, time)
+    );
     onTapDetected?.(TapEventType.DOUBLE_TAP_RIGHT, time);
   };
 
   const handleDoubleTapRewind = () => {
     const time = currentTime.current - FORWARD_OR_REWIND_DURATION;
-    leftRippleViewRef.current?.onPress(getForOrRewTimeTipText('-', FORWARD_OR_REWIND_DURATION, time));
+    leftRippleViewRef.current?.onPress(
+      getForOrRewTimeTipText('-', FORWARD_OR_REWIND_DURATION, time)
+    );
     onTapDetected?.(TapEventType.DOUBLE_TAP_LEFT, time);
   };
 
@@ -304,7 +324,11 @@ const GestureView = (props: GestureViewProps) => {
     if (tapTimeoutRef.current) {
       clearTimeout(tapTimeoutRef.current);
       tapTimeoutRef.current = null;
-      if (!gestureEnabled.current || layoutOption?.current === 'basic' || locked)
+      if (
+        !gestureEnabled.current ||
+        layoutOption?.current === 'basic' ||
+        locked
+      )
         return;
       onTapDetected?.(TapEventType.DOUBLE_TAP);
 
@@ -388,7 +412,7 @@ const GestureView = (props: GestureViewProps) => {
             storeDx.current.push(gestureState.dx);
             storeDy.current.push(gestureState.dy);
           }
-          
+
           if (storeDx.current.length === 5) {
             if (
               Math.abs(storeDx.current[4] - storeDx.current[0]) >
@@ -423,9 +447,7 @@ const GestureView = (props: GestureViewProps) => {
                   autoHide: false,
                 });
               }
-
             } else {
-
               if (
                 !(locationY.current + dy.current >= 0) ||
                 !(locationY.current + dy.current <= layoutSize.current.height)
@@ -470,7 +492,6 @@ const GestureView = (props: GestureViewProps) => {
                       GestureEventType.BRIGHTNESS,
                       originalBrightness
                     );
-
                   } else {
                     seekBrightnessDy.current = Math.round(
                       Math.abs(gestureState.dy) / brightnessFactor.current
@@ -535,10 +556,7 @@ const GestureView = (props: GestureViewProps) => {
                       ),
                     });
                     volumeBarHeight.setValue(boundHeight);
-                    onGestureMove?.(
-                      GestureEventType.VOLUME,
-                      originalVolume
-                    );
+                    onGestureMove?.(GestureEventType.VOLUME, originalVolume);
                   } else {
                     seekVolumeDy.current = Math.round(
                       Math.abs(gestureState.dy) / volumeFactor.current
@@ -565,10 +583,7 @@ const GestureView = (props: GestureViewProps) => {
                       ),
                     });
                     volumeBarHeight.setValue(boundHeight);
-                    onGestureMove?.(
-                      GestureEventType.VOLUME,
-                      originalVolume
-                    );
+                    onGestureMove?.(GestureEventType.VOLUME, originalVolume);
                   }
                 }
               }
@@ -610,10 +625,7 @@ const GestureView = (props: GestureViewProps) => {
             MAX_VOLUME,
             layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
           );
-          onGestureEnd?.(
-            GestureEventType.VOLUME,
-            originalVolume
-          );
+          onGestureEnd?.(GestureEventType.VOLUME, originalVolume);
         } else {
           brightnessTipViewRef.current?.updateState({
             showTip: false,
@@ -630,10 +642,7 @@ const GestureView = (props: GestureViewProps) => {
             MAX_BRIGHTNESS,
             layoutSize.current.height * BAR_HEIGHT_PERCENTAGE
           );
-          onGestureEnd?.(
-            GestureEventType.BRIGHTNESS,
-            originalBrightness
-          );
+          onGestureEnd?.(GestureEventType.BRIGHTNESS, originalBrightness);
         }
 
         activeGesture.current = '';
@@ -647,9 +656,7 @@ const GestureView = (props: GestureViewProps) => {
       onPanResponderTerminate: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
-      ) => {
-
-      },
+      ) => {},
       onShouldBlockNativeResponder: (
         e: GestureResponderEvent,
         gestureState: PanResponderGestureState
@@ -678,7 +685,7 @@ const GestureView = (props: GestureViewProps) => {
               width: dimension.width / 4,
             }}
             rippleStyle={{ right: 0 }}
-            rippleSize={ dimension.height / 2 }
+            rippleSize={dimension.height / 2}
           >
             <IconRewind
               style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
@@ -698,7 +705,7 @@ const GestureView = (props: GestureViewProps) => {
               width: dimension.width / 4,
             }}
             rippleStyle={{ left: 0 }}
-            rippleSize={ dimension.height / 2 }
+            rippleSize={dimension.height / 2}
           >
             <IconFastForward
               style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
@@ -725,7 +732,12 @@ const GestureView = (props: GestureViewProps) => {
             dimension={dimension}
             barHeight={volumeBarHeight}
             heightPercentage={BAR_HEIGHT_PERCENTAGE}
-            icon={<IconVolume2 size={volumeBarTheme.iconSize} color={volumeBarTheme.iconColor} />}
+            icon={
+              <IconVolume2
+                size={volumeBarTheme.iconSize}
+                color={volumeBarTheme.iconColor}
+              />
+            }
             theme={volumeBarTheme}
           />
         )}
@@ -746,7 +758,12 @@ const GestureView = (props: GestureViewProps) => {
             dimension={dimension}
             barHeight={brightnessBarHeight}
             heightPercentage={BAR_HEIGHT_PERCENTAGE}
-            icon={<IconSun size={brightnessBarTheme.iconSize} color={brightnessBarTheme.iconColor} />}
+            icon={
+              <IconSun
+                size={brightnessBarTheme.iconSize}
+                color={brightnessBarTheme.iconColor}
+              />
+            }
             theme={brightnessBarTheme}
           />
         )}

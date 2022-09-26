@@ -11,12 +11,13 @@ interface IconButtonProps {
   style?: StyleProp<ViewStyle>;
 }
 
-const IconButton = ({children, style, onPress}: IconButtonProps) => {
+const IconButton = ({ children, style, onPress }: IconButtonProps) => {
   return (
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={onPress}
-      activeOpacity={0.7}>
+      activeOpacity={0.7}
+    >
       {children}
     </TouchableOpacity>
   );

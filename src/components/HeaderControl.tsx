@@ -15,7 +15,7 @@ import {
 import IconButton from './IconButton';
 import GradientView from './GradientView';
 import type { NexenTheme } from '../utils/Theme';
-import type { EdgeInsets, LayoutMode, PlayerConfig } from './NexenPlayer';
+import type { EdgeInsets, NexenConfig } from './NexenPlayer';
 import IconTagView, {
   IconTagViewRef,
   IconTagViewState,
@@ -34,7 +34,7 @@ type HeaderControlProps = {
   fullScreen: boolean;
   locked: boolean;
   insets?: EdgeInsets;
-  playerConfig?: PlayerConfig;
+  playerConfig?: NexenConfig;
   nexenTheme?: NexenTheme;
   onBackPress?: () => void;
   onAspectRatioPress?: () => void;
@@ -207,9 +207,7 @@ const HeaderControl = React.forwardRef<HeaderControlRef, HeaderControlProps>(
 
 export default React.memo(HeaderControl);
 
-HeaderControl.defaultProps = {
-
-};
+HeaderControl.defaultProps = {};
 
 const styles = StyleSheet.create({
   container: {

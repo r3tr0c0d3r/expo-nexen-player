@@ -1,12 +1,10 @@
 import React from 'react';
-import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
 import { IconXCircle } from '../assets/icons';
 import ModalView from './ModalView';
 import type { TipViewTheme } from './TipView';
 
-export interface ErrorViewTheme extends TipViewTheme {
-  
-}
+export interface ErrorViewTheme extends TipViewTheme {}
 type ErrorViewProps = {
   theme?: ErrorViewTheme;
   style?: StyleProp<ViewStyle>;
@@ -23,9 +21,7 @@ const ErrorView = (props: ErrorViewProps) => {
   return (
     <ModalView style={[style]}>
       <IconXCircle size={theme?.iconSize} color={theme?.iconColor} />
-      <Text style={[styles.text, errorTextStyle]}>
-        {errorText}
-      </Text>
+      <Text style={[styles.text, errorTextStyle]}>{errorText}</Text>
     </ModalView>
   );
 };

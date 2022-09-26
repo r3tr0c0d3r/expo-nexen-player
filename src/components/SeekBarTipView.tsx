@@ -1,7 +1,6 @@
-import React, {useImperativeHandle} from 'react';
+import React, { useImperativeHandle } from 'react';
 import {
   Animated,
-  ColorValue,
   StyleProp,
   StyleSheet,
   Text,
@@ -14,10 +13,9 @@ import ModalView from './ModalView';
 import { Dimension } from './NexenPlayer';
 import type { TipViewTheme } from './TipView';
 
-
-export interface SeekBarTipViewTheme extends VerticalSeekBarTheme, TipViewTheme {
-  
-}
+export interface SeekBarTipViewTheme
+  extends VerticalSeekBarTheme,
+    TipViewTheme {}
 
 type SeekBarTipViewProps = {
   dimension: Dimension;
@@ -37,81 +35,81 @@ type SeekBarTipViewState = {
   autoHide?: boolean;
   icon?: JSX.Element;
 };
-const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>((props, ref) => {
-  // console.log(`SeekBarTipView: renders`)
-  const {dimension, barHeight, heightPercentage, icon, parentStyle, style, theme} = props;
-  // React.useEffect(() => {
-  //   console.log(`SeekBarTipView theme:: ${JSON.stringify(theme)}`);
-  // }, [])
+const SeekBarTipView = React.forwardRef<SeekBarTipViewRef, SeekBarTipViewProps>(
+  (props, ref) => {
+    const {
+      dimension,
+      barHeight,
+      heightPercentage,
+      icon,
+      parentStyle,
+      style,
+      theme,
+    } = props;
 
-  const [state, setState] = React.useState<SeekBarTipViewState>({
-    showTip: false,
-    tipText: '',
-    autoHide: false,
-    icon,
-  });
+    const [state, setState] = React.useState<SeekBarTipViewState>({
+      showTip: false,
+      tipText: '',
+      autoHide: false,
+      icon,
+    });
 
-  const timer = React.useRef<NodeJS.Timeout>();
+    const timer = React.useRef<NodeJS.Timeout>();
 
-  useImperativeHandle(ref, () => ({
-    updateState: (newState: SeekBarTipViewState) => {
-      setState({...state, ...newState});
-    },
-  }));
+    useImperativeHandle(ref, () => ({
+      updateState: (newState: SeekBarTipViewState) => {
+        setState({ ...state, ...newState });
+      },
+    }));
 
-  const textStyle = {
-    color: theme?.textColor,
-    fontSize: theme?.textSize,
-    fontFamily: theme?.font,
-  }
+    const textStyle = {
+      color: theme?.textColor,
+      fontSize: theme?.textSize,
+      fontFamily: theme?.font,
+    };
 
-  const seekBarStyle = {
-    backgroundColor: theme?.barColor,
-    height: barHeight,
-  }
+    const seekBarStyle = {
+      backgroundColor: theme?.barColor,
+      height: barHeight,
+    };
 
-  const seekBarUnderlayStyle = {
-    backgroundColor: theme?.underlayColor,
-    height: dimension.height * heightPercentage,
-  }
+    const seekBarUnderlayStyle = {
+      backgroundColor: theme?.underlayColor,
+      height: dimension.height * heightPercentage,
+    };
 
-  React.useEffect(() => {
-    if (state.autoHide) {
-      if (timer.current) {
-        clearTimeout(timer.current);
+    React.useEffect(() => {
+      if (state.autoHide) {
+        if (timer.current) {
+          clearTimeout(timer.current);
+        }
+        if (state.showTip) {
+          timer.current = setTimeout(() => {
+            setState({ ...state, showTip: false, tipText: '' });
+          }, 1200);
+        }
       }
-      if (state.showTip) {
-        timer.current = setTimeout(() => {
-          setState({...state, showTip: false, tipText: ''});
-        }, 1200);
-      }
-    }
-  }, [state]);
+    }, [state]);
 
-  return (
-    <>
-      {state.showTip && (
-        <View style={[styles.parent, parentStyle]}>
-          <ModalView style={[styles.container, style]}>
-            <Text style={[styles.text, textStyle]}>{state.tipText}</Text>
-            <View style={styles.barContainer}>
-              <View
-                style={[
-                  styles.seekBarUnderlay,
-                  seekBarUnderlayStyle,
-                ]}>
-                <Animated.View
-                  style={[styles.seekBar, seekBarStyle]}
-                />
+    return (
+      <>
+        {state.showTip && (
+          <View style={[styles.parent, parentStyle]}>
+            <ModalView style={[styles.container, style]}>
+              <Text style={[styles.text, textStyle]}>{state.tipText}</Text>
+              <View style={styles.barContainer}>
+                <View style={[styles.seekBarUnderlay, seekBarUnderlayStyle]}>
+                  <Animated.View style={[styles.seekBar, seekBarStyle]} />
+                </View>
               </View>
-            </View>
-            <View style={styles.iconContainer}>{state.icon}</View>
-          </ModalView>
-        </View>
-      )}
-    </>
-  );
-});
+              <View style={styles.iconContainer}>{state.icon}</View>
+            </ModalView>
+          </View>
+        )}
+      </>
+    );
+  }
+);
 
 export default SeekBarTipView;
 

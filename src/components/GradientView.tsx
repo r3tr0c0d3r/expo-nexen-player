@@ -97,9 +97,6 @@ export default GradientView;
 GradientView.defaultProps = {
   startPoint: { x: 0, y: 0 },
   endPoint: { x: 0, y: 1 },
-  // startColor: 'red',
-  // middleColor: 'green',
-  // endColor: 'blue',
   startColor: 'black',
   middleColor: 'black',
   endColor: 'black',

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   FlatList,
   Image,
-  ListRenderItem,
   ListRenderItemInfo,
   StyleProp,
   StyleSheet,
@@ -12,14 +11,14 @@ import {
 } from 'react-native';
 import GradientView from './GradientView';
 import { NexenTheme } from '../utils/Theme';
-import { EdgeInsets, PlaylistItem } from './NexenPlayer';
+import { EdgeInsets, PlayListItem } from './NexenPlayer';
 import { IconPlayCircle } from '../assets/icons';
 import ModalView from './ModalView';
 import { withAnimation } from '../hoc/withAnimation';
 
 type PlaylistControlProps = {
   fullScreen: boolean;
-  playlist?: PlaylistItem[];
+  playlist?: PlayListItem[];
   playlistIndex?: number;
   nexenTheme?: NexenTheme;
   insets?: EdgeInsets;
@@ -33,7 +32,6 @@ const PlaylistControl = (props: PlaylistControlProps) => {
     playlist,
     playlistIndex,
     fullScreen,
-    nexenTheme,
     insets,
     onPlaylistItemPress,
   } = props;
@@ -42,25 +40,25 @@ const PlaylistControl = (props: PlaylistControlProps) => {
 
   const CONTAINER_HEIGHT = StyleSheet.flatten(style).height || 120;
   const CONTAINER_PADDING = 16;
-  const ITEM_HEIGHT = fullScreen 
-  ? Number(CONTAINER_HEIGHT) - CONTAINER_PADDING - insets?.bottom!
-  : Number(CONTAINER_HEIGHT) - CONTAINER_PADDING * 2;
+  const ITEM_HEIGHT = fullScreen
+    ? Number(CONTAINER_HEIGHT) - CONTAINER_PADDING - insets?.bottom!
+    : Number(CONTAINER_HEIGHT) - CONTAINER_PADDING * 2;
   const ITEM_WIDTH = ITEM_HEIGHT * (16 / 9);
   const ICON_SIZE = ITEM_HEIGHT * 0.6;
 
   const SEPERATOR_WIDTH = 5;
   const TOTAL_WIDTH = ITEM_WIDTH + SEPERATOR_WIDTH;
 
-  const CONTAINER_HORIZONTAL_PADDING = fullScreen 
-    ? (insets?.left! + insets?.right!) / 2 > 0 
-    ? (insets?.left! + insets?.right!) / 2
-    : 8
+  const CONTAINER_HORIZONTAL_PADDING = fullScreen
+    ? (insets?.left! + insets?.right!) / 2 > 0
+      ? (insets?.left! + insets?.right!) / 2
+      : 8
     : 8;
 
   const renderPlayListItem = ({
     item,
     index,
-  }: ListRenderItemInfo<PlaylistItem>) => {
+  }: ListRenderItemInfo<PlayListItem>) => {
     const itemStyle = {
       width: ITEM_WIDTH,
       height: ITEM_HEIGHT,
@@ -76,7 +74,7 @@ const PlaylistControl = (props: PlaylistControlProps) => {
       >
         <Image
           style={[styles.image, itemStyle]}
-          source={{ uri: item.poster }}
+          source={{ uri: item.itemSource.poster }}
         />
         {index !== playlistIndex && (
           <IconPlayCircle
@@ -113,7 +111,9 @@ const PlaylistControl = (props: PlaylistControlProps) => {
           ref={playlistRef}
           style={styles.list}
           keyExtractor={(_, index) => index.toString()}
-          ItemSeparatorComponent={() => <View style={{ width: SEPERATOR_WIDTH }} />}
+          ItemSeparatorComponent={() => (
+            <View style={{ width: SEPERATOR_WIDTH }} />
+          )}
           data={playlist}
           renderItem={renderPlayListItem}
           initialScrollIndex={playlistIndex}

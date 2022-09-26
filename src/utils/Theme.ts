@@ -107,8 +107,8 @@ export const DefaultSpeedSeekBar: SpeedSeekBarTheme = {
     lineHeight: 2,
     dotSize: 6,
     dotCornerRadius: 3,
-    thumbSize: 16,
-    thumbCornerRadius: 8,
+    thumbSize: 18,
+    thumbCornerRadius: 9,
 }
 
 export interface LineBarTheme {

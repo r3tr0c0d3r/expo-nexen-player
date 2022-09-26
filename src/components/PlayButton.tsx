@@ -1,9 +1,7 @@
 import {
   GestureResponderEvent,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
 import React from 'react';
 import { IconPlayCircle } from '../assets/icons';
@@ -15,9 +13,9 @@ type PlayButtonProps = {
 };
 
 const PlayButton = (props: PlayButtonProps) => {
-  const {dimension} = props;
+  const { dimension } = props;
   const minValue = Math.min(dimension?.width!, dimension?.height!);
-  const ICON_SIZE = (minValue * 0.3);
+  const ICON_SIZE = minValue * 0.3;
   return (
     <TouchableOpacity
       style={styles.container}
@@ -32,8 +30,8 @@ const PlayButton = (props: PlayButtonProps) => {
 export default PlayButton;
 
 PlayButton.defaultProps = {
-  dimension: {width: 0, height: 0}
-}
+  dimension: { width: 0, height: 0 },
+};
 
 const styles = StyleSheet.create({
   container: {

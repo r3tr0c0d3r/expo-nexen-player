@@ -1,17 +1,10 @@
 import React, { useImperativeHandle } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import type { NexenTheme, TagViewTheme } from '../utils/Theme';
+import type { TagViewTheme } from '../utils/Theme';
 
-import {
-  IconRepeat,
-  IconSun1,
-  IconVolume,
-  IconZap,
-} from '../assets/icons';
+import { IconRepeat, IconSun1, IconVolume, IconZap } from '../assets/icons';
 
-export interface IconTagViewTheme extends TagViewTheme {
-
-}
+export interface IconTagViewTheme extends TagViewTheme {}
 
 type IconTagViewProps = {
   theme?: IconTagViewTheme;
@@ -31,19 +24,17 @@ const IconTagView = React.forwardRef<IconTagViewRef, IconTagViewProps>(
     const { theme, style } = props;
 
     const [state, setState] = React.useState<IconTagViewState>({
-      volumeIcon: <IconVolume size={theme?.iconSize} color={theme?.iconColor} />,
-      brightnessIcon: <IconSun1 size={theme?.iconSize} color={theme?.iconColor} />,
+      volumeIcon: (
+        <IconVolume size={theme?.iconSize} color={theme?.iconColor} />
+      ),
+      brightnessIcon: (
+        <IconSun1 size={theme?.iconSize} color={theme?.iconColor} />
+      ),
       repeatIcon: (
-        <IconRepeat
-          size={theme?.iconSize}
-          color={theme?.inactiveIconColor}
-        />
+        <IconRepeat size={theme?.iconSize} color={theme?.inactiveIconColor} />
       ),
       speedIcon: (
-        <IconZap
-          size={theme?.iconSize}
-          color={theme?.inactiveIconColor}
-        />
+        <IconZap size={theme?.iconSize} color={theme?.inactiveIconColor} />
       ),
     });
 

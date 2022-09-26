@@ -1,6 +1,24 @@
-import { PlaylistItem } from "expo-nexen-player";
+import { PlayListItem } from "expo-nexen-player";
 
-export const data: PlaylistItem[] = [ 
+interface DataItem extends PlayListItem {
+  description: string;
+}
+export const getData = (): DataItem[] => {
+  const items: DataItem[] = [];
+  data.map((item) => {
+    items.push({
+    itemSource: {
+      title: item.title,
+      source: item.source,
+      poster: item.poster,
+    }, 
+    description: item.description,
+  })
+  });
+  return items;
+}
+
+export const data = [ 
     { "description" : "Big Buck Bunny tells the story of a giant rabbit with a heart bigger than himself. When one sunny day three rodents rudely harass him, something snaps... and the rabbit ain't no bunny anymore! In the typical cartoon tradition he prepares the nasty rodents a comical revenge.\n\nLicensed under the Creative Commons Attribution license\nhttp://www.bigbuckbunny.org",
       "source" : {uri: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
       "poster" : "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",

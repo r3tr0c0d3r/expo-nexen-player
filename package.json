@@ -1,7 +1,7 @@
 {
   "name": "expo-nexen-player",
-  "version": "0.1.2",
-  "description": "A next generation video player for expo project",
+  "version": "1.0.0",
+  "description": "next gen video player for expo project",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -47,8 +47,7 @@
   },
   "homepage": "https://github.com/r3tr0c0d3r/expo-nexen-player#readme",
   "publishConfig": {
-    "zzz": "https://registry.npmjs.org/",
-    "registry": "http://localhost:4873/"
+    "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.7",

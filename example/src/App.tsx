@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, View, Button, Text, Alert } from 'react-native';
+import { StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import Font, { useFonts } from 'expo-font';
 import {
@@ -15,7 +15,6 @@ import FlatlistScreen from './FlatlistScreen';
 import { IconFlatList, IconScrollView, IconSingle } from '../assets/icons';
 import ScrollViewScreen from './ScrollViewScreen';
 
-
 export default function App() {
   const Tab = createBottomTabNavigator();
 
@@ -24,7 +23,7 @@ export default function App() {
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
+            tabBarIcon: ({ color, size }) => {
               if (route.name === 'Single') {
                 return <IconSingle size={size} color={color} />;
               } else if (route.name === 'ScrollView') {
@@ -39,7 +38,11 @@ export default function App() {
         >
           <Tab.Screen name="Single" component={SingleScreen} />
           <Tab.Screen name="ScrollView" component={ScrollViewScreen} />
-          <Tab.Screen name="FlatList" component={FlatlistScreen} options={{headerShown: false}}/>
+          <Tab.Screen
+            name="FlatList"
+            component={FlatlistScreen}
+            options={{ headerShown: false }}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
@@ -54,7 +57,6 @@ const styles = StyleSheet.create({
   player: {
     width: '100%',
     height: 260,
-    // marginVertical: 5,
   },
   topBar: {
     width: '100%',
@@ -68,7 +70,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     padding: 10,
-    backgroundColor: 'pink',
     zIndex: 1,
   },
 });

@@ -6,8 +6,6 @@ import {
   ListRenderItemInfo,
   StyleProp,
   StyleSheet,
-  Text,
-  TouchableHighlight,
   TouchableOpacity,
   View,
   ViewStyle,
@@ -16,22 +14,20 @@ import Button from './Button';
 import NexenPlayer, {
   LayoutMode,
   NexenPlayerRef,
-  PlayerConfig,
-  PlayerSource,
-  PlaylistItem,
+  NexenConfig,
+  NexenSource,
+  PlayList,
+  PlayListItem,
 } from 'expo-nexen-player';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useNavigation } from '@react-navigation/native';
-import { data } from './data';
+import { getData } from './data';
 import { StatusBar } from 'expo-status-bar';
 import { IconSingle } from '../assets/icons';
-type Props = {};
+const { width } = Dimensions.get('screen');
 
-const { width, height } = Dimensions.get('screen');
-
-const SingleScreen = (props: Props) => {
-  // const COLUMNS = width > height ? 3 : 2;
+const SingleScreen = () => {
   const COLUMNS = 3;
   const ITEM_SIZE = width / 3;
   const navigation = useNavigation();
@@ -41,8 +37,8 @@ const SingleScreen = (props: Props) => {
 
   const [paused, setPaused] = React.useState(true);
   const [isFullScreen, setIsFullScreen] = React.useState<boolean>(false);
-  const [playlist, setPlaylist] = React.useState(false);
-  const [source, setSource] = React.useState<PlayerSource>({
+  const [playlist, setPlaylist] = React.useState<PlayList | undefined>();
+  const [source] = React.useState<NexenSource>({
     // source: {
     //   uri: 'https://bitmovin-a.akamaihd.net/content/sintel/sintel.mpd',
     // },
@@ -51,7 +47,7 @@ const SingleScreen = (props: Props) => {
     poster: 'https://img.youtube.com/vi/KrmxD8didgQ/0.jpg',
     title: "Ryu's Hurricane Kick and Hadoken",
   });
-  const [config, setConfig] = React.useState<PlayerConfig>({
+  const [config, setConfig] = React.useState<NexenConfig>({
     // posterResizeMode: 'cover',
     layoutMode: 'basic',
     autoPlay: true,
@@ -72,14 +68,6 @@ const SingleScreen = (props: Props) => {
     });
   };
 
-  const onPausePress = () => {
-    if (paused) {
-      playerRef.current?.play();
-    } else {
-      playerRef?.current?.pause();
-    }
-    setPaused((prevState) => !prevState);
-  };
   const updateLayoutMode = (mode: LayoutMode) => {
     setConfig((prevState) => {
       return {
@@ -99,15 +87,6 @@ const SingleScreen = (props: Props) => {
     }
   };
 
-  const onToggleFullscreen = () => {
-    // playerRef.current?.setPlaylistIndex(9);
-    setIsFullScreen((prevState) => !prevState);
-  };
-
-  const onReloadPress = () => {
-    playerRef.current?.reload();
-  };
-
   const onFullScreenModeUpdate = (fullScreen: boolean) => {
     if (fullScreen) {
       hideTabBar();
@@ -123,16 +102,8 @@ const SingleScreen = (props: Props) => {
     setIsFullScreen(fullScreen);
   };
 
-  const onPlaylistItemSelect = (index: number) => {
-    setSource((prevState) => {
-      return {
-        ...prevState,
-        playlist: {
-          items: prevState.playlist?.items!,
-          currentIndex: index,
-        }
-      }
-    });
+  const onPlayListItemSelect = (index: number) => {
+    updateCurrentIndex(index);
   };
 
   const onBackPressed = () => {};
@@ -157,55 +128,33 @@ const SingleScreen = (props: Props) => {
 
   const onPlaylistSet = () => {
     if (playlist) {
-      setSource((prevState) => {
-        return {
-          ...prevState,
-          playlist: undefined,
-        };
-      });
+      setPlaylist(undefined);
     } else {
-      setSource((prevState) => {
-        return {
-          ...prevState,
-          playlist: {
-            items: data,
-            currentIndex: 4,
-          },
-        };
+      setPlaylist({
+        items: getData(),
+        currentIndex: 4,
       });
     }
-    setPlaylist((prevState) => !prevState);
   };
 
   const updateCurrentIndex = (index: number) => {
-    setSource((prevState) => {
+    setPlaylist((prevState) => {
       return {
         ...prevState,
-        playlist: {
-          items: prevState.playlist?.items!,
-          currentIndex: index,
-        }
-      }
+        currentIndex: index,
+      };
     });
-  }
+  };
 
   const renderItem = ({
     item,
     index,
-  }: ListRenderItemInfo<PlaylistItem>): ReactElement<any, any> => {
-    
+  }: ListRenderItemInfo<PlayListItem>): ReactElement<any, any> => {
     const onItemPress = () => {
-      if (index !== source.playlist?.currentIndex) {
-        playerRef.current?.load(index, () => {
-          updateCurrentIndex(index);
-        });
+      if (index !== playlist?.currentIndex) {
+        updateCurrentIndex(index);
       }
-      
-      // playerRef.current?.unload(() => {
-      //   updateCurrentIndex(index);
-      // });
-      
-    }
+    };
 
     return (
       <TouchableOpacity
@@ -218,9 +167,9 @@ const SingleScreen = (props: Props) => {
             width: '100%',
             height: '100%',
           }}
-          source={{ uri: item.poster }}
+          source={{ uri: item.itemSource.poster }}
         />
-        {index !== source.playlist?.currentIndex && (
+        {index !== playlist?.currentIndex && (
           <View style={styles.iconContainer}>
             <IconSingle size={50} color={'rgba(255,255,255,0.3)'} />
           </View>
@@ -252,8 +201,9 @@ const SingleScreen = (props: Props) => {
           <NexenPlayer
             ref={playerRef}
             style={styles.player}
-            playerSource={source}
-            playerConfig={config}
+            source={source}
+            config={config}
+            playList={playlist}
             insets={edgeinsets}
             theme={
               {
@@ -272,13 +222,13 @@ const SingleScreen = (props: Props) => {
             onSkipBack={onSkipBack}
             onBackPress={onBackPressed}
             onFullScreenModeUpdate={onFullScreenModeUpdate}
-            onPlaylistItemSelect={onPlaylistItemSelect}
+            onPlayListItemSelect={onPlayListItemSelect}
           />
         </View>
         <FlatList
           keyExtractor={(item, index) => index.toString()}
           style={{ flex: 1 }}
-          data={source.playlist?.items}
+          data={playlist?.items}
           renderItem={renderItem}
           numColumns={COLUMNS}
         />
