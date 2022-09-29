@@ -1,6 +1,6 @@
 {
   "name": "expo-nexen-player",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "next gen video player for expo project",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
